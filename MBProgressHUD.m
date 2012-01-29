@@ -8,7 +8,13 @@
 
 #import "MBProgressHUD.h"
 
-@interface MBProgressHUD ()
+@interface MBProgressHUD () {	
+	SEL methodForExecution;
+	id targetForExecution;
+	id objectForExecution;
+	
+	BOOL useAnimation;
+}
 
 - (void)hideUsingAnimation:(BOOL)animated;
 - (void)showUsingAnimation:(BOOL)animated;
@@ -27,6 +33,9 @@
 - (void)launchExecution;
 - (void)cleanUp;
 
+@property (nonatomic, strong) UILabel *label;
+@property (nonatomic, strong) UILabel *detailsLabel;
+
 @property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) NSTimer *graceTimer;
 @property (nonatomic, strong) NSTimer *minShowTimer;
@@ -43,12 +52,17 @@
 #pragma mark -
 #pragma mark Accessors
 
+
+@synthesize mode;
 @synthesize animationType;
 
 @synthesize delegate;
+
+@synthesize label, detailsLabel;
+@synthesize labelText, detailsLabelText;
+@synthesize labelFont, detailsLabelFont;
+
 @synthesize opacity;
-@synthesize labelFont;
-@synthesize detailsLabelFont;
 
 @synthesize indicator;
 
@@ -67,6 +81,8 @@
 @synthesize minShowTimer;
 @synthesize taskInProgress;
 @synthesize removeFromSuperViewOnHide;
+
+@synthesize progress;
 
 @synthesize customView;
 
@@ -283,10 +299,10 @@
         self.alpha = 0.0f;
 		
         // Add label
-        label = [[UILabel alloc] initWithFrame:self.bounds];
+        self.label = [[UILabel alloc] initWithFrame:self.bounds];
 		
         // Add details label
-        detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
+        self.detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
 		
 		taskInProgress = NO;
     }
@@ -325,13 +341,13 @@
         }
 		
         // Set label properties
-        label.font = self.labelFont;
-        label.adjustsFontSizeToFitWidth = NO;
-        label.textAlignment = UITextAlignmentCenter;
-        label.opaque = NO;
-        label.backgroundColor = [UIColor clearColor];
-        label.textColor = [UIColor whiteColor];
-        label.text = self.labelText;
+        self.label.font = self.labelFont;
+        self.label.adjustsFontSizeToFitWidth = NO;
+        self.label.textAlignment = UITextAlignmentCenter;
+        self.label.opaque = NO;
+        self.label.backgroundColor = [UIColor clearColor];
+        self.label.textColor = [UIColor whiteColor];
+        self.label.text = self.labelText;
 		
         // Update HUD size
         if (self.width < (lWidth + 2 * margin)) {
@@ -347,7 +363,7 @@
         CGRect lFrame = CGRectMake(floorf((frame.size.width - lWidth) / 2) + xOffset,
                                    floorf(indFrame.origin.y + indFrame.size.height + PADDING),
                                    lWidth, lHeight);
-        label.frame = lFrame;
+        self.label.frame = lFrame;
 		
         [self addSubview:label];
 		
@@ -355,14 +371,14 @@
         if (nil != self.detailsLabelText) {
 			
             // Set label properties
-            detailsLabel.font = self.detailsLabelFont;
-            detailsLabel.adjustsFontSizeToFitWidth = NO;
-            detailsLabel.textAlignment = UITextAlignmentCenter;
-            detailsLabel.opaque = NO;
-            detailsLabel.backgroundColor = [UIColor clearColor];
-            detailsLabel.textColor = [UIColor whiteColor];
-            detailsLabel.text = self.detailsLabelText;
-            detailsLabel.numberOfLines = 0;
+            self.detailsLabel.font = self.detailsLabelFont;
+            self.detailsLabel.adjustsFontSizeToFitWidth = NO;
+            self.detailsLabel.textAlignment = UITextAlignmentCenter;
+            self.detailsLabel.opaque = NO;
+            self.detailsLabel.backgroundColor = [UIColor clearColor];
+            self.detailsLabel.textColor = [UIColor whiteColor];
+            self.detailsLabel.text = self.detailsLabelText;
+            self.detailsLabel.numberOfLines = 0;
 
 			CGFloat maxHeight = frame.size.height - self.height - 2*margin;
 			CGSize labelSize = [detailsLabel.text sizeWithFont:detailsLabel.font constrainedToSize:CGSizeMake(frame.size.width - 4*margin, maxHeight) lineBreakMode:detailsLabel.lineBreakMode];
@@ -381,14 +397,14 @@
 			
             // Move first label to make room for the new label
             lFrame.origin.y -= (floorf(lHeight / 2 + PADDING / 2));
-            label.frame = lFrame;
+            self.label.frame = lFrame;
 			
             // Set label position and dimensions
             CGRect lFrameD = CGRectMake(floorf((frame.size.width - lWidth) / 2) + xOffset,
                                         lFrame.origin.y + lFrame.size.height + PADDING, lWidth, lHeight);
-            detailsLabel.frame = lFrameD;
+            self.detailsLabel.frame = lFrameD;
 			
-            [self addSubview:detailsLabel];
+            [self addSubview:self.detailsLabel];
         }
     }
 	
@@ -503,8 +519,6 @@
 }
 
 - (void)done {
-    isFinished = YES;
-	
     // If delegate was set make the callback
     self.alpha = 0.0f;
     

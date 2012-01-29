@@ -48,53 +48,7 @@ typedef enum {
  *   indicator view.
  * - If also the detailsLabelText property is set then another label is placed below the first label.
  */
-@interface MBProgressHUD : UIView {
-	
-	MBProgressHUDMode mode;
-    MBProgressHUDAnimation animationType;
-	
-	SEL methodForExecution;
-	id targetForExecution;
-	id objectForExecution;
-	BOOL useAnimation;
-	
-    float yOffset;
-    float xOffset;
-	
-	float width;
-	float height;
-	
-	CGSize minSize;
-	BOOL square;
-	
-	float margin;
-	
-	BOOL dimBackground;
-	
-	BOOL taskInProgress;
-	float graceTime;
-	float minShowTime;
-	NSTimer *graceTimer;
-	NSTimer *minShowTimer;
-	NSDate *showStarted;
-	
-	UIView *indicator;
-	UILabel *label;
-	UILabel *detailsLabel;
-	
-	float progress;
-	
-    NSString *labelText;
-	NSString *detailsLabelText;
-	float opacity;
-	UIFont *labelFont;
-	UIFont *detailsLabelFont;
-	
-    BOOL isFinished;
-	BOOL removeFromSuperViewOnHide;
-	
-	UIView *customView;
-}
+@interface MBProgressHUD : UIView
 
 /**
  * Creates a new HUD, adds it to provided view and shows it. The counterpart to this method is hideHUDForView:animated:.
