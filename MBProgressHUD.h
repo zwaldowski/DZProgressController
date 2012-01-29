@@ -94,8 +94,6 @@ typedef enum {
 	BOOL removeFromSuperViewOnHide;
 	
 	UIView *customView;
-	
-	CGAffineTransform rotationTransform;
 }
 
 /**

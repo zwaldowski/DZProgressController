@@ -289,7 +289,6 @@
         detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
 		
 		taskInProgress = NO;
-		rotationTransform = CGAffineTransformIdentity;
     }
     return self;
 }
@@ -529,9 +528,7 @@
 
 - (void)showUsingAnimation:(BOOL)animated {
     self.alpha = 0.0f;
-    if (animated && animationType == MBProgressHUDAnimationZoom) {
-        self.transform = CGAffineTransformConcat(rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
-    }
+    
     
 	self.showStarted = [NSDate date];
     // Fade in
@@ -539,9 +536,9 @@
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.30];
         self.alpha = 1.0f;
-        if (animationType == MBProgressHUDAnimationZoom) {
-            self.transform = rotationTransform;
-        }
+		if (animationType == MBProgressHUDAnimationZoom) {
+			self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(1.5f, 1.5f));
+		}
         [UIView commitAnimations];
     }
     else {
@@ -559,7 +556,7 @@
         // 0.02 prevents the hud from passing through touches during the animation the hud will get completely hidden
         // in the done method
         if (animationType == MBProgressHUDAnimationZoom) {
-            self.transform = CGAffineTransformConcat(rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
+            self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(0.5f, 0.5f));
         }
         self.alpha = 0.02f;
         [UIView commitAnimations];
@@ -652,13 +649,11 @@
 		if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
 		else { degrees = 0; }
 	}
-	
-	rotationTransform = CGAffineTransformMakeRotation(RADIANS(degrees));
 
 	if (animated) {
 		[UIView beginAnimations:nil context:nil];
 	}
-	[self setTransform:rotationTransform];
+	self.transform = CGAffineTransformMakeRotation(RADIANS(degrees));
 	if (animated) {
 		[UIView commitAnimations];
 	}
