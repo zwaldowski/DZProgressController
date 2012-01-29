@@ -84,11 +84,6 @@ typedef enum {
 	
 	float progress;
 	
-#if __has_feature(objc_arc)
-	id<MBProgressHUDDelegate> __weak delegate;
-#else
-	id<MBProgressHUDDelegate> delegate;
-#endif
     NSString *labelText;
 	NSString *detailsLabelText;
 	float opacity;
@@ -149,74 +144,68 @@ typedef enum {
  * The UIView (i.g., a UIIMageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
  * For best results use a 37 by 37 pixel view (so the bounds match the build in indicator bounds). 
  */
-#if __has_feature(objc_arc)
-@property (strong) UIView *customView;
-#else
-@property (retain) UIView *customView;
-#endif
+@property (nonatomic, strong) UIView *customView;
+
 /** 
  * MBProgressHUD operation mode. Switches between indeterminate (MBProgressHUDModeIndeterminate) and determinate
  * progress (MBProgressHUDModeDeterminate). The default is MBProgressHUDModeIndeterminate.
  *
  * @see MBProgressHUDMode
  */
-@property (assign) MBProgressHUDMode mode;
+@property (nonatomic) MBProgressHUDMode mode;
 
 /**
  * The animation type that should be used when the HUD is shown and hidden. 
  *
  * @see MBProgressHUDAnimation
  */
-@property (assign) MBProgressHUDAnimation animationType;
+@property (nonatomic) MBProgressHUDAnimation animationType;
 
 /** 
  * The HUD delegate object. If set the delegate will receive HUDWasHidden: callbacks when the HUD was hidden. The
  * delegate should conform to the MBProgressHUDDelegate protocol and implement the HUDWasHidden: method.
  */
-#if __has_feature(objc_arc)
-@property (weak) id<MBProgressHUDDelegate> delegate;
-#else
-@property (assign) id<MBProgressHUDDelegate> delegate;
-#endif
+@property (nonatomic, weak) id <MBProgressHUDDelegate> delegate;
+
 /** 
  * An optional short message to be displayed below the activity indicator. The HUD is automatically resized to fit
  * the entire text. If the text is too long it will get clipped by displaying "..." at the end. If left unchanged or
  * set to @"", then no message is displayed.
  */
-@property (copy) NSString *labelText;
+@property (nonatomic, copy) NSString *labelText;
 
 /** 
  * An optional details message displayed below the labelText message. This message is displayed only if the labelText
  * property is also set and is different from an empty string (@"").
  */
-@property (copy) NSString *detailsLabelText;
+@property (nonatomic, copy) NSString *detailsLabelText;
 
 /** 
  * The opacity of the HUD window. Defaults to 0.9 (90% opacity). 
  */
-@property (assign) float opacity;
+@property (nonatomic) float opacity;
 
 /** 
  * The x-axis offset of the HUD relative to the centre of the superview. 
  */
-@property (assign) float xOffset;
+@property (nonatomic) float xOffset;
 
 /** 
  * The y-ayis offset of the HUD relative to the centre of the superview. 
  */
-@property (assign) float yOffset;
+@property (nonatomic) float yOffset;
 
 /**
  * The amounth of space between the HUD edge and the HUD elements (labels, indicators or custom views).
  *
  * Defaults to 20.0
  */
-@property (assign) float margin;
+@property (nonatomic) float margin;
 
 /** 
  * Cover the HUD background view with a radial gradient. 
  */
-@property (assign) BOOL dimBackground;
+@property (nonatomic, getter = dimsBackground) BOOL dimBackground;
 
 /*
  * Grace period is the time (in seconds) that the invoked method may be run without 
@@ -227,7 +216,7 @@ typedef enum {
  * Grace time functionality is only supported when the task status is known!
  * @see taskInProgress
  */
-@property (assign) float graceTime;
+@property (nonatomic) float graceTime;
 
 
 /**
@@ -235,7 +224,7 @@ typedef enum {
  * This avoids the problem of the HUD being shown and than instantly hidden.
  * Defaults to 0 (no minimum show time).
  */
-@property (assign) float minShowTime;
+@property (nonatomic) float minShowTime;
 
 /**
  * Indicates that the executed operation is in progress. Needed for correct graceTime operation.
@@ -245,44 +234,38 @@ typedef enum {
  * you need to set this property when your task starts and completes in order to have normal graceTime 
  * functunality.
  */
-@property (assign) BOOL taskInProgress;
+@property (nonatomic, getter = isTaskInProgress) BOOL taskInProgress;
 
 /**
  * Removes the HUD from it's parent view when hidden. 
  * Defaults to NO. 
  */
-@property (assign) BOOL removeFromSuperViewOnHide;
+@property (nonatomic) BOOL removeFromSuperViewOnHide;
 
 /** 
  * Font to be used for the main label. Set this property if the default is not adequate. 
  */
-#if __has_feature(objc_arc)
-@property (strong) UIFont* labelFont;
-#else
-@property (retain) UIFont* labelFont;
-#endif
+@property (nonatomic, strong) UIFont *labelFont;
+
 /** 
  * Font to be used for the details label. Set this property if the default is not adequate. 
  */
-#if __has_feature(objc_arc)
-@property (strong) UIFont* detailsLabelFont;
-#else
-@property (retain) UIFont* detailsLabelFont;
-#endif
+@property (nonatomic, strong) UIFont *detailsLabelFont;
+
 /** 
  * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 
  */
-@property (assign) float progress;
+@property (nonatomic) float progress;
 
 /**
  * The minimum size of the HUD bezel. Defaults to CGSizeZero.
  */
-@property (assign) CGSize minSize;
+@property (nonatomic) CGSize minSize;
 
 /**
  * Force the HUD dimensions to be equal if possible. 
  */
-@property (assign, getter = isSquare) BOOL square;
+@property (nonatomic, getter = isSquare) BOOL square;
 
 /** 
  * Display the HUD. You need to make sure that the main thread completes its run loop soon after this method call so
@@ -360,7 +343,7 @@ typedef enum {
 /**
  * Progress (0.0 to 1.0)
  */
-@property (nonatomic, assign) float progress;
+@property (nonatomic) float progress;
 
 @end
 

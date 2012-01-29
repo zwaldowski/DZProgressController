@@ -27,20 +27,13 @@
 - (void)launchExecution;
 - (void)cleanUp;
 
-#if __has_feature(objc_arc)
-@property (strong) UIView *indicator;
-@property (strong) NSTimer *graceTimer;
-@property (strong) NSTimer *minShowTimer;
-@property (strong) NSDate *showStarted;
-#else
-@property (retain) UIView *indicator;
-@property (retain) NSTimer *graceTimer;
-@property (retain) NSTimer *minShowTimer;
-@property (retain) NSDate *showStarted;
-#endif
+@property (nonatomic, strong) UIView *indicator;
+@property (nonatomic, strong) NSTimer *graceTimer;
+@property (nonatomic, strong) NSTimer *minShowTimer;
+@property (nonatomic, strong) NSDate *showStarted;
 
-@property (assign) float width;
-@property (assign) float height;
+@property (nonatomic) float width;
+@property (nonatomic) float height;
 
 @end
 
@@ -158,18 +151,12 @@
 
 - (void)updateLabelText:(NSString *)newText {
     if (labelText != newText) {
-#if !__has_feature(objc_arc)
-        [labelText release];
-#endif
         labelText = [newText copy];
     }
 }
 
 - (void)updateDetailsLabelText:(NSString *)newText {
     if (detailsLabelText != newText) {
-#if !__has_feature(objc_arc)
-        [detailsLabelText release];
-#endif
         detailsLabelText = [newText copy];
     }
 }
@@ -184,26 +171,15 @@
     }
 	
     if (mode == MBProgressHUDModeDeterminate) {
-#if __has_feature(objc_arc)
-        self.indicator = [[MBRoundProgressView alloc] init];
-#else
-        self.indicator = [[[MBRoundProgressView alloc] init] autorelease];
-#endif
-}
-    else if (mode == MBProgressHUDModeCustomView && self.customView != nil){
+        self.indicator = [MBRoundProgressView new];
+	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
         self.indicator = self.customView;
     } else {
-#if __has_feature(objc_arc)
-		self.indicator = [[UIActivityIndicatorView alloc]
-						   initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-#else
-		self.indicator = [[[UIActivityIndicatorView alloc]
-						   initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
-#endif
-        [(UIActivityIndicatorView *)indicator startAnimating];
+		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+		[view startAnimating];
+		self.indicator = view;
 	}
-	
-	
+
     [self addSubview:indicator];
 }
 
@@ -222,11 +198,7 @@
 	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:view];
 	[view addSubview:hud];
 	[hud show:animated];
-#if __has_feature(objc_arc)
 	return hud;
-#else
-	return [hud autorelease];
-#endif
 }
 
 + (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated {
@@ -321,21 +293,6 @@
     }
     return self;
 }
-
-#if !__has_feature(objc_arc)
-- (void)dealloc {
-    [indicator release];
-    [label release];
-    [detailsLabel release];
-    [labelText release];
-    [detailsLabelText release];
-	[graceTimer release];
-	[minShowTimer release];
-	[showStarted release];
-	[customView release];
-    [super dealloc];
-}
-#endif
 
 #pragma mark -
 #pragma mark Layout
@@ -517,15 +474,9 @@
 }
 
 - (void)showWhileExecuting:(SEL)method onTarget:(id)target withObject:(id)object animated:(BOOL)animated {
-	
     methodForExecution = method;
-#if __has_feature(objc_arc)
     targetForExecution = target;
     objectForExecution = object;	
-#else
-    targetForExecution = [target retain];
-    objectForExecution = [object retain];
-#endif
     
     // Launch execution in new thread
 	taskInProgress = YES;
@@ -536,21 +487,16 @@
 }
 
 - (void)launchExecution {
-#if !__has_feature(objc_arc)
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-#endif	
+	@autoreleasepool {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    // Start executing the requested task
-    [targetForExecution performSelector:methodForExecution withObject:objectForExecution];
+		// Start executing the requested task
+		[targetForExecution performSelector:methodForExecution withObject:objectForExecution];
 #pragma clang diagnostic pop
-    // Task completed, update view in main thread (note: view operations should
-    // be done only in the main thread)
-    [self performSelectorOnMainThread:@selector(cleanUp) withObject:nil waitUntilDone:NO];
-	
-#if !__has_feature(objc_arc)
-    [pool release];
-#endif
+		// Task completed, update view in main thread (note: view operations should
+		// be done only in the main thread)
+		[self performSelectorOnMainThread:@selector(cleanUp) withObject:nil waitUntilDone:NO];
+	}
 }
 
 - (void)animationFinished:(NSString *)animationID finished:(BOOL)finished context:(void*)context {
@@ -574,11 +520,6 @@
 	taskInProgress = NO;
 	
 	self.indicator = nil;
-	
-#if !__has_feature(objc_arc)
-    [targetForExecution release];
-    [objectForExecution release];
-#endif
 	
     [self hide:useAnimation];
 }
