@@ -6,10 +6,9 @@
 //  Copyright bukovinski.com 2009. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "MBProgressHUD.h"
 
-@interface HudDemoViewController : UIViewController <MBProgressHUDDelegate> {
+@interface HudDemoViewController : UIViewController {
 	MBProgressHUD *HUD;
 	
 	long long expectedLength;
