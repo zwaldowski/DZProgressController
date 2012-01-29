@@ -170,9 +170,8 @@ typedef enum {
 @property (assign) MBProgressHUDAnimation animationType;
 
 /** 
- * The HUD delegate object. If set the delegate will receive hudWasHidden callbacks when the HUD was hidden. The
- * delegate should conform to the MBProgressHUDDelegate protocol and implement the hudWasHidden method. The delegate
- * object will not be retained.
+ * The HUD delegate object. If set the delegate will receive HUDWasHidden: callbacks when the HUD was hidden. The
+ * delegate should conform to the MBProgressHUDDelegate protocol and implement the HUDWasHidden: method.
  */
 #if __has_feature(objc_arc)
 @property (weak) id<MBProgressHUDDelegate> delegate;
@@ -301,21 +300,21 @@ typedef enum {
 - (void)show:(BOOL)animated;
 
 /** 
- * Hide the HUD. This still calls the hudWasHidden delegate. This is the counterpart of the hide: method. Use it to
- * hide the HUD when your task completes.
+ * Hide the HUD. This still calls the HUDWasHidden: delegate. Use it to hide the HUD when your task completes.
  *
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.
+ * @see hide:afterDelay:
  */
 - (void)hide:(BOOL)animated;
 
 /** 
- * Hide the HUD after a delay. This still calls the hudWasHidden delegate. This is the counterpart of the hide: method. Use it to
- * hide the HUD when your task completes.
+ * Hide the HUD after a delay. This still calls the HUDWasHidden: delegate. Use it to hide the HUD when your task completes.
  *
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.
  * @param delay Delay in secons until the HUD is hidden.
+ * @see hide:
  */
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay;
 
@@ -344,13 +343,7 @@ typedef enum {
 /** 
  * Called after the HUD was fully hidden from the screen. 
  */
-- (void)hudWasHidden:(MBProgressHUD *)hud;
-
-/**
- * @deprecated use hudWasHidden: instead
- * @see hudWasHidden:
- */
-- (void)hudWasHidden __attribute__ ((deprecated)); 
+- (void)HUDWasHidden:(MBProgressHUD *)hud;
 
 @end
 
