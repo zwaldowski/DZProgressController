@@ -8,6 +8,11 @@
 
 #import "MBProgressHUD.h"
 
+// A progress view for showing definite progress by filling up a circle (pie chart).
+@interface MBRoundProgressView : UIView
+@property (nonatomic) CGFloat progress;
+@end
+
 @interface MBProgressHUD () {	
 	SEL methodForExecution;
 	id targetForExecution;
@@ -679,20 +684,7 @@
 
 @implementation MBRoundProgressView
 
-#pragma mark -
-#pragma mark Accessors
-
-- (float)progress {
-    return _progress;
-}
-
-- (void)setProgress:(float)progress {
-    _progress = progress;
-    [self setNeedsDisplay];
-}
-
-#pragma mark -
-#pragma mark Lifecycle
+@synthesize progress;
 
 - (id)init {
     return [self initWithFrame:CGRectMake(0.0f, 0.0f, 37.0f, 37.0f)];
@@ -707,11 +699,15 @@
     return self;
 }
 
-#pragma mark -
-#pragma mark Drawing
+- (void)setProgress:(float)newProgress {
+	if (progress == newProgress)
+		return;
+	
+    progress = newProgress;
+    [self setNeedsDisplay];
+}
 
 - (void)drawRect:(CGRect)rect {
-    
     CGRect allRect = self.bounds;
     CGRect circleRect = CGRectInset(allRect, 2.0f, 2.0f);
     

@@ -281,23 +281,3 @@ typedef enum {
 - (void)HUDWasHidden:(MBProgressHUD *)hud;
 
 @end
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * A progress view for showing definite progress by filling up a circle (pie chart).
- */
-@interface MBRoundProgressView : UIView {
-@private
-    float _progress;
-}
-
-/**
- * Progress (0.0 to 1.0)
- */
-@property (nonatomic) float progress;
-
-@end
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
