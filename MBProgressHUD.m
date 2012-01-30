@@ -112,10 +112,6 @@
 	}
 }
 
-- (MBProgressHUDMode)mode {
-	return mode;
-}
-
 - (void)setLabelText:(NSString *)newText {
 	if ([NSThread isMainThread]) {
 		[self updateLabelText:newText];
@@ -128,10 +124,6 @@
 	}
 }
 
-- (NSString *)labelText {
-	return labelText;
-}
-
 - (void)setDetailsLabelText:(NSString *)newText {
 	if ([NSThread isMainThread]) {
 		[self updateDetailsLabelText:newText];
@@ -142,10 +134,6 @@
 		[self performSelectorOnMainThread:@selector(setNeedsLayout) withObject:nil waitUntilDone:NO];
 		[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
 	}
-}
-
-- (NSString *)detailsLabelText {
-	return detailsLabelText;
 }
 
 - (void)setProgress:(float)newProgress {
@@ -161,10 +149,6 @@
 			[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
 		}
     }
-}
-
-- (float)progress {
-	return progress;
 }
 
 #pragma mark -
