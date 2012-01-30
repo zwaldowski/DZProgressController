@@ -249,18 +249,16 @@ typedef enum {
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay;
 
 /** 
- * Shows the HUD while a background task is executing in a new thread, then hides the HUD.
+ * Shows the HUD while a background task is executing in a background queue, then hides the HUD.
  *
- * This method also takes care of NSAutoreleasePools so your method does not have to be concerned with setting up a
+ * This method also takes care of autorelease pools so your method does not have to be concerned with setting up a
  * pool.
  *
- * @param method The method to be executed while the HUD is shown. This method will be executed in a new thread.
- * @param target The object that the target method belongs to.
- * @param object An optional object to be passed to the method.
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
+ * The HUD will appear and disappear using the current animationType.
+ *
+ * @param block A code block to be executed while the HUD is shown. This block will be executed in a global background queue.
  */
-- (void)showWhileExecuting:(SEL)method onTarget:(id)target withObject:(id)object animated:(BOOL)animated;
+- (void)showWhileExecuting:(dispatch_block_t)block;
 
 @end
 

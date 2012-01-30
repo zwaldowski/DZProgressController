@@ -426,7 +426,7 @@
 	}];
 }
 
-- (void)showWhileExecuting:(dispatch_block_t)block animated:(BOOL)animated {
+- (void)showWhileExecuting:(dispatch_block_t)block {
 	if (!block) return;
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -434,7 +434,7 @@
 		self.taskInProgress = YES;
 		
 		dispatch_sync(dispatch_get_main_queue(), ^{
-			[self show:animated];
+			[self show:YES];
 		});
 		
 		@autoreleasepool {
@@ -445,18 +445,9 @@
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if (self.superview)
-				[self hide:animated];
+				[self hide:YES];
 		});
 	});
-}
-
-- (void)showWhileExecuting:(SEL)method onTarget:(id)target withObject:(id)object animated:(BOOL)animated {
-	[self showWhileExecuting:^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-		[target performSelector:method withObject:object];
-#pragma clang diagnostic pop
-	} animated:animated];
 }
 
 #pragma mark BG Drawing

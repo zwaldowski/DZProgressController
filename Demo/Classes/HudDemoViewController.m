@@ -44,11 +44,13 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
     [self.navigationController.view addSubview:HUD];
 	
-    // Regiser for HUD callbacks so we can remove it from the window at the right time
+    // Remote it from the window at the right time
 	HUD.removeFromSuperViewOnHide = YES;
 	
-    // Show the HUD while the provided method executes in a new thread
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+	// Show the HUD while the provided block executes in the background
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 - (IBAction)showWithLabel:(id)sender {
@@ -59,11 +61,12 @@
 	HUD.removeFromSuperViewOnHide = YES;
     HUD.labelText = @"Loading";
 	
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 - (IBAction)showWithDetailsLabel:(id)sender {
-	
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
     [self.navigationController.view addSubview:HUD];
 	
@@ -71,11 +74,12 @@
     HUD.labelText = @"Loading";
     HUD.detailsLabelText = @"updating data";
 	
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 - (IBAction)showWithLabelDeterminate:(id)sender {
-
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
@@ -86,7 +90,9 @@
     HUD.labelText = @"Loading";
 	
 	// myProgressTask uses the HUD instance to update progress
-    [HUD showWhileExecuting:@selector(myProgressTask) onTarget:self withObject:nil animated:YES];
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 - (IBAction)showWithCustomView:(id)sender {
@@ -109,7 +115,6 @@
 }
 
 - (IBAction)showWithLabelMixed:(id)sender {
-
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
@@ -117,24 +122,19 @@
     HUD.labelText = @"Connecting";
 	HUD.minSize = CGSizeMake(135.f, 135.f);
 	
-    [HUD showWhileExecuting:@selector(myMixedTask) onTarget:self withObject:nil animated:YES];
+	[HUD showWhileExecuting:^{
+		[self myMixedTask];
+	}];
 }
 
 - (IBAction)showUsingBlocks:(id)sender {
-#ifdef __BLOCKS__
-	// No need to retain (just a local variable)
-	MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
+	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+	[self.navigationController.view addSubview:hud];
 	hud.labelText = @"Loading";
-	
-	dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-		// Do a taks in the background
+	hud.removeFromSuperViewOnHide = YES;
+	[hud showWhileExecuting:^{
 		[self myTask];
-		// Hide the HUD in the main tread 
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
-		});
-	});
-#endif
+	}];
 }
 
 - (IBAction)showOnWindow:(id)sender {
@@ -145,7 +145,9 @@
 	HUD.removeFromSuperViewOnHide = YES;
     HUD.labelText = @"Loading";
 	
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 - (IBAction)showURL:(id)sender {
@@ -160,7 +162,6 @@
 
 
 - (IBAction)showWithGradient:(id)sender {
-	
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
@@ -169,8 +170,10 @@
 	// Regiser for HUD callbacks so we can remove it from the window at the right time
 	HUD.removeFromSuperViewOnHide = YES;
 	
-    // Show the HUD while the provided method executes in a new thread
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+    // Show the HUD while the provided block executes in the background
+	[HUD showWhileExecuting:^{
+		[self myTask];
+	}];
 }
 
 #pragma mark -
