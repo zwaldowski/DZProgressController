@@ -30,8 +30,7 @@
 @property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) NSDate *showStarted;
 
-@property (nonatomic) CGFloat width;
-@property (nonatomic) CGFloat height;
+@property (nonatomic) CGSize HUDSize;
 
 @end
 
@@ -55,8 +54,7 @@
 
 @synthesize indicator;
 
-@synthesize width;
-@synthesize height;
+@synthesize HUDSize;
 @synthesize xOffset;
 @synthesize yOffset;
 @synthesize minSize;
@@ -282,31 +280,14 @@
 #pragma mark Layout
 
 - (void)layoutSubviews {
-    CGRect frame = self.bounds;
+	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
+	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
 	
-    // Compute HUD dimensions based on indicator size (add margin to HUD border)
-    CGRect indFrame = indicator.bounds;
-    self.width = indFrame.size.width + 2 * margin;
-    self.height = indFrame.size.height + 2 * margin;
-	
-    // Position the indicator
-    indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2) + self.xOffset;
+	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2) + self.xOffset;
     indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2) + self.yOffset;
-    indicator.frame = indFrame;
 	
     // Add label if label text was set
-    if (nil != self.labelText) {
-        // Get size of label text
-        CGSize dims = [self.labelText sizeWithFont:self.labelFont];
-		
-        // Compute label dimensions based on font metrics if size is larger than max then clip the label width
-        CGFloat lHeight = dims.height;
-        CGFloat lWidth;
-        if (dims.width <= (frame.size.width - 4 * margin))
-            lWidth = dims.width;
-        else
-            lWidth = frame.size.width - 4 * margin;
-		
+    if (self.labelText) {		
         // Set label properties
         self.label.font = self.labelFont;
         self.label.adjustsFontSizeToFitWidth = NO;
@@ -316,73 +297,74 @@
         self.label.textColor = [UIColor whiteColor];
         self.label.text = self.labelText;
 		
-        // Update HUD size
-        if (self.width < (lWidth + 2 * margin)) {
-            self.width = lWidth + 2 * margin;
-        }
-        self.height = self.height + lHeight + PADDING;
+		// Compute label dimensions based on font metrics if size is larger than max then clip the label width
+		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
+        CGSize dims = [self.labelText sizeWithFont:self.labelFont constrainedToSize:maxSize lineBreakMode:UILineBreakModeClip];
 		
-        // Move indicator to make room for the label
-        indFrame.origin.y -= (floorf(lHeight / 2 + PADDING / 2));
-        indicator.frame = indFrame;
+        // Update HUD size
+		if (newSize.width < dims.width + 2 * margin)
+            newSize.width = dims.width + 2 * margin;
+        newSize.height += dims.height + PADDING;
 		
         // Set the label position and dimensions
-        CGRect lFrame = CGRectMake(floorf((frame.size.width - lWidth) / 2) + xOffset,
-                                   floorf(indFrame.origin.y + indFrame.size.height + PADDING),
-                                   lWidth, lHeight);
-        self.label.frame = lFrame;
+		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
+		lFrame.origin.y = CGRectGetMaxY(indFrame) - PADDING;
+		lFrame.size = dims;
+		
+        // Move indicator to make room for the label
+        indFrame.origin.y -= floor(dims.height / 2) + PADDING;
 		
         [self addSubview:label];
-		
-        // Add details label delatils text was set
-        if (nil != self.detailsLabelText) {
-			
-            // Set label properties
-            self.detailsLabel.font = self.detailsLabelFont;
-            self.detailsLabel.adjustsFontSizeToFitWidth = NO;
-            self.detailsLabel.textAlignment = UITextAlignmentCenter;
-            self.detailsLabel.opaque = NO;
-            self.detailsLabel.backgroundColor = [UIColor clearColor];
-            self.detailsLabel.textColor = [UIColor whiteColor];
-            self.detailsLabel.text = self.detailsLabelText;
-            self.detailsLabel.numberOfLines = 0;
-
-			CGFloat maxHeight = frame.size.height - self.height - 2*margin;
-			CGSize labelSize = [detailsLabel.text sizeWithFont:detailsLabel.font constrainedToSize:CGSizeMake(frame.size.width - 4*margin, maxHeight) lineBreakMode:detailsLabel.lineBreakMode];
-            lHeight = labelSize.height;
-            lWidth = labelSize.width;
-			
-            // Update HUD size
-            if (self.width < lWidth) {
-                self.width = lWidth + 2 * margin;
-            }
-            self.height = self.height + lHeight + PADDING;
-			
-            // Move indicator to make room for the new label
-            indFrame.origin.y -= (floorf(lHeight / 2 + PADDING / 2));
-            indicator.frame = indFrame;
-			
-            // Move first label to make room for the new label
-            lFrame.origin.y -= (floorf(lHeight / 2 + PADDING / 2));
-            self.label.frame = lFrame;
-			
-            // Set label position and dimensions
-            CGRect lFrameD = CGRectMake(floorf((frame.size.width - lWidth) / 2) + xOffset,
-                                        lFrame.origin.y + lFrame.size.height + PADDING, lWidth, lHeight);
-            self.detailsLabel.frame = lFrameD;
-			
-            [self addSubview:self.detailsLabel];
-        }
     }
 	
+	// Add details label delatils text was set
+	if (self.detailsLabelText) {
+		
+		// Set label properties
+		self.detailsLabel.font = self.detailsLabelFont;
+		self.detailsLabel.adjustsFontSizeToFitWidth = NO;
+		self.detailsLabel.textAlignment = UITextAlignmentCenter;
+		self.detailsLabel.opaque = NO;
+		self.detailsLabel.backgroundColor = [UIColor clearColor];
+		self.detailsLabel.textColor = [UIColor whiteColor];
+		self.detailsLabel.text = self.detailsLabelText;
+		self.detailsLabel.numberOfLines = 0;
+		
+		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2*margin);
+		CGSize dims = [self.detailsLabelText sizeWithFont:self.detailsLabelFont constrainedToSize:maxSize lineBreakMode:self.detailsLabel.lineBreakMode];
+		
+		// Update HUD size
+		if (newSize.width < dims.width + 2 * margin)
+			newSize.width = dims.width + 2 * margin;
+		newSize.height += dims.height + PADDING;
+		
+		// Move indicator to make room for the new label
+		indFrame.origin.y -= (floor(dims.height / 2 + PADDING / 2));
+		
+		// Move first label to make room for the new label
+		lFrame.origin.y -= (floor(dims.height / 2 + PADDING / 2));
+		
+		// Set label position and dimensions
+		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
+		dFrame.origin.y = CGRectGetMaxY(lFrame) + PADDING * 2;
+		dFrame.size = dims;
+		
+		[self addSubview:self.detailsLabel];
 	}
 	
-	if (self.width < minSize.width) {
-		self.width = minSize.width;
+	label.frame = lFrame;
+	detailsLabel.frame = dFrame;
+	indicator.frame = indFrame;
+	
+	if (newSize.width < minSize.width) {
+		newSize.width = minSize.width;
 	} 
-	if (self.height < minSize.height) {
-		self.height = minSize.height;
+	
+	if (newSize.height < minSize.height) {
+		newSize.height = minSize.height;
 	}
+	
+	self.HUDSize = newSize;
 }
 
 #pragma mark -
@@ -476,13 +458,14 @@
 		CGGradientRelease(gradient);
     }    
     
-    // Center HUD
-    CGRect allRect = self.bounds;
-    // Draw rounded HUD bacgroud rect
-    CGRect boxRect = CGRectMake(roundf((allRect.size.width - self.width) / 2) + self.xOffset,
-                                roundf((allRect.size.height - self.height) / 2) + self.yOffset, self.width, self.height);
+    // Draw rounded HUD background rect
+	CGRect boxRect = CGRectZero;
+	boxRect.size = self.HUDSize;
+	boxRect.origin.x = roundf((self.bounds.size.width - self.HUDSize.width) / 2) + self.xOffset;
+	boxRect.origin.y = roundf((self.bounds.size.height - self.HUDSize.height) / 2) + self.yOffset;
+	
 	// Corner radius
-	float radius = 10.0f;
+	CGFloat radius = 10.0f;
 	
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, self.opacity);
