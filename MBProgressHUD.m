@@ -120,15 +120,14 @@
     progress = newProgress;
 	
     // Update display ony if showing the determinate progress view
-    if (mode == MBProgressHUDModeDeterminate) {
-		if ([NSThread isMainThread]) {
-			[self updateProgress];
-			[self setNeedsDisplay];
-		} else {
-			[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
-			[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
-		}
-    }
+    if (mode != MBProgressHUDModeDeterminate)
+		return;
+	
+	if ([NSThread isMainThread]) {
+		[self updateProgress];
+	} else {
+		[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
+	}
 }
 
 #pragma mark -
@@ -147,7 +146,9 @@
 }
 
 - (void)updateProgress {
-    [(MBRoundProgressView *)indicator setProgress:progress];
+	if (![indicator isKindOfClass:[MBRoundProgressView class]])
+		return;
+	[(MBRoundProgressView *)indicator setProgress:progress];
 }
 
 - (void)updateIndicators {
@@ -539,7 +540,52 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation MBRoundProgressView
+#import <QuartzCore/QuartzCore.h>
+
+@interface MBRoundProgressLayer : CAShapeLayer
+
+@property (nonatomic) CGFloat progress;
+
+@end
+
+@implementation MBRoundProgressLayer
+
+@dynamic progress;
+
++ (BOOL)needsDisplayForKey:(NSString *)key {
+	return [key isEqualToString:@"progress"] || [super needsDisplayForKey:key];
+}
+
+- (void)drawInContext:(CGContextRef)context {
+	CGRect allRect = self.bounds;
+    CGRect circleRect = CGRectInset(allRect, 2.0f, 2.0f);
+
+	// Draw background
+	CGContextSetStrokeColorWithColor(context, self.strokeColor);
+	CGContextSetFillColorWithColor(context, self.fillColor);
+    CGContextSetLineWidth(context, 2.0f);
+    CGContextFillEllipseInRect(context, circleRect);
+    CGContextStrokeEllipseInRect(context, circleRect);
+    
+    // Draw progress
+    CGPoint center = CGPointMake(CGRectGetMidX(allRect), CGRectGetMidY(allRect));
+    CGFloat radius = floorf((allRect.size.width - 4) / 2);
+    CGFloat startAngle = -M_PI / 2; // 90 degrees
+    CGFloat endAngle = (self.progress * 2 * M_PI) + startAngle;
+	CGContextSetFillColorWithColor(context, self.strokeColor);
+    CGContextMoveToPoint(context, center.x, center.y);
+    CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
+    CGContextClosePath(context);
+    CGContextFillPath(context);
+	
+	[super drawInContext:context];
+}
+
+@end
+
+@implementation MBRoundProgressView {
+	MBRoundProgressLayer *sublayer;
+}
 
 @synthesize progress;
 
@@ -552,43 +598,23 @@
     if (self) {
         self.backgroundColor = [UIColor clearColor];
 		self.opaque = NO;
+		sublayer = [MBRoundProgressLayer layer];
+		sublayer.strokeColor = [[UIColor whiteColor] CGColor];
+		sublayer.fillColor = [[UIColor colorWithWhite:1.0 alpha:0.1] CGColor];
+		sublayer.frame = frame;
+		sublayer.lineWidth = 2.0f;
+		sublayer.shouldRasterize = YES;
+		[self.layer addSublayer:sublayer];
     }
     return self;
 }
 
-- (void)setProgress:(float)newProgress {
-	if (progress == newProgress)
-		return;
-	
-    progress = newProgress;
-    [self setNeedsDisplay];
+- (CGFloat)progress {
+	return sublayer.progress;
 }
 
-- (void)drawRect:(CGRect)rect {
-    CGRect allRect = self.bounds;
-    CGRect circleRect = CGRectInset(allRect, 2.0f, 2.0f);
-    
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    
-    // Draw background
-    CGContextSetRGBStrokeColor(context, 1.0f, 1.0f, 1.0f, 1.0f); // white
-    CGContextSetRGBFillColor(context, 1.0f, 1.0f, 1.0f, 0.1f); // translucent white
-    CGContextSetLineWidth(context, 2.0f);
-    CGContextFillEllipseInRect(context, circleRect);
-    CGContextStrokeEllipseInRect(context, circleRect);
-    
-    // Draw progress
-    CGPoint center = CGPointMake(allRect.size.width / 2, allRect.size.height / 2);
-    CGFloat radius = (allRect.size.width - 4) / 2;
-    CGFloat startAngle = - ((float)M_PI / 2); // 90 degrees
-    CGFloat endAngle = (self.progress * 2 * (float)M_PI) + startAngle;
-    CGContextSetRGBFillColor(context, 1.0f, 1.0f, 1.0f, 1.0f); // white
-    CGContextMoveToPoint(context, center.x, center.y);
-    CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
-    CGContextClosePath(context);
-    CGContextFillPath(context);
+- (void)setProgress:(CGFloat)newProgress {
+	[sublayer setProgress:newProgress];
 }
 
 @end
-
-/////////////////////////////////////////////////////////////////////////////////////////////
