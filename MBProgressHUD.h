@@ -135,24 +135,24 @@ typedef enum {
 /** 
  * The opacity of the HUD window. Defaults to 0.9 (90% opacity). 
  */
-@property (nonatomic) float opacity;
+@property (nonatomic) CGFloat opacity;
 
 /** 
  * The x-axis offset of the HUD relative to the centre of the superview. 
  */
-@property (nonatomic) float xOffset;
+@property (nonatomic) CGFloat xOffset;
 
 /** 
  * The y-ayis offset of the HUD relative to the centre of the superview. 
  */
-@property (nonatomic) float yOffset;
+@property (nonatomic) CGFloat yOffset;
 
 /**
  * The amounth of space between the HUD edge and the HUD elements (labels, indicators or custom views).
  *
  * Defaults to 20.0
  */
-@property (nonatomic) float margin;
+@property (nonatomic) CGFloat margin;
 
 /** 
  * Cover the HUD background view with a radial gradient. 
@@ -168,7 +168,7 @@ typedef enum {
  * Grace time functionality is only supported when the task status is known!
  * @see taskInProgress
  */
-@property (nonatomic) float graceTime;
+@property (nonatomic) NSTimeInterval graceTime;
 
 
 /**
@@ -176,7 +176,7 @@ typedef enum {
  * This avoids the problem of the HUD being shown and than instantly hidden.
  * Defaults to 0 (no minimum show time).
  */
-@property (nonatomic) float minShowTime;
+@property (nonatomic) NSTimeInterval minShowTime;
 
 /**
  * Indicates that the executed operation is in progress. Needed for correct graceTime operation.
@@ -207,7 +207,7 @@ typedef enum {
 /** 
  * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 
  */
-@property (nonatomic) float progress;
+@property (nonatomic) CGFloat progress;
 
 /**
  * The minimum size of the HUD bezel. Defaults to CGSizeZero.

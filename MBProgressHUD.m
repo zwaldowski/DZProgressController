@@ -30,8 +30,8 @@
 @property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) NSDate *showStarted;
 
-@property (nonatomic) float width;
-@property (nonatomic) float height;
+@property (nonatomic) CGFloat width;
+@property (nonatomic) CGFloat height;
 
 @end
 
@@ -302,14 +302,12 @@
         CGSize dims = [self.labelText sizeWithFont:self.labelFont];
 		
         // Compute label dimensions based on font metrics if size is larger than max then clip the label width
-        float lHeight = dims.height;
-        float lWidth;
-        if (dims.width <= (frame.size.width - 4 * margin)) {
+        CGFloat lHeight = dims.height;
+        CGFloat lWidth;
+        if (dims.width <= (frame.size.width - 4 * margin))
             lWidth = dims.width;
-        }
-        else {
+        else
             lWidth = frame.size.width - 4 * margin;
-        }
 		
         // Set label properties
         self.label.font = self.labelFont;
@@ -508,23 +506,20 @@
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, self.opacity);
     CGContextMoveToPoint(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect));
-    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMinY(boxRect) + radius, radius, 3 * (float)M_PI / 2, 0, 0);
-    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMaxY(boxRect) - radius, radius, 0, (float)M_PI / 2, 0);
-    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMaxY(boxRect) - radius, radius, (float)M_PI / 2, (float)M_PI, 0);
-    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect) + radius, radius, (float)M_PI, 3 * (float)M_PI / 2, 0);
+    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMinY(boxRect) + radius, radius, 3 * M_PI / 2, 0, 0);
+    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMaxY(boxRect) - radius, radius, 0, M_PI / 2, 0);
+    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMaxY(boxRect) - radius, radius, M_PI / 2, M_PI, 0);
+    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect) + radius, radius, M_PI, 3 * M_PI / 2, 0);
     CGContextClosePath(context);
     CGContextFillPath(context);
 }
 
 #pragma mark -
-#pragma mark Manual oritentation change
-
-#define RADIANS(degrees) ((degrees * (float)M_PI) / 180.0f)
+#pragma mark Manual orientation change
 
 - (void)deviceOrientationDidChange:(NSNotification *)notification { 
-	if (!self.superview) {
+	if (!self.superview)
 		return;
-	}
 	
 	if ([self.superview isKindOfClass:[UIWindow class]]) {
 		[self setTransformForCurrentOrientation:YES];
@@ -556,7 +551,7 @@
 	
 	NSTimeInterval animationLength = animated ? (1./3.) : 0;
 	[UIView animateWithDuration:animationLength animations:^{
-		self.transform = CGAffineTransformMakeRotation(RADIANS(degrees));
+		self.transform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
 	}];
 }
 
