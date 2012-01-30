@@ -91,7 +91,7 @@
 	
 	// myProgressTask uses the HUD instance to update progress
 	[HUD showWhileExecuting:^{
-		[self myTask];
+		[self myProgressTask];
 	}];
 }
 
