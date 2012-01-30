@@ -14,8 +14,8 @@
 @end
 
 @interface MBProgressHUD () {
-	UIStatusBarStyle oldStatusBarStyle;
-	BOOL useAnimation;
+	UIStatusBarStyle _statusBarStyle;
+	CGSize _HUDSize;
 }
 
 - (void)updateLabelText:(NSString *)newText;
@@ -31,8 +31,6 @@
 @property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) NSDate *showStarted;
 
-@property (nonatomic) CGSize HUDSize;
-
 @end
 
 
@@ -40,7 +38,6 @@
 
 #pragma mark -
 #pragma mark Accessors
-
 
 @synthesize mode;
 @synthesize animationType;
@@ -55,7 +52,6 @@
 
 @synthesize indicator;
 
-@synthesize HUDSize;
 @synthesize xOffset;
 @synthesize yOffset;
 @synthesize minSize;
@@ -64,7 +60,6 @@
 
 @synthesize graceTime;
 @synthesize minShowTime;
-@synthesize taskInProgress;
 @synthesize removeFromSuperViewOnHide;
 
 @synthesize progress;
@@ -251,18 +246,11 @@
         self.detailsLabelFont = [UIFont boldSystemFontOfSize:LABELDETAILSFONTSIZE];
         self.xOffset = 0.0f;
         self.yOffset = 0.0f;
-		self.dimBackground = NO;
-		self.margin = 20.0f;
-		self.graceTime = 0.0f;
-		self.minShowTime = 0.0f;
-		self.removeFromSuperViewOnHide = NO;
-		self.minSize = CGSizeZero;
-		
+		self.margin = 18.0f;
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 		
         // Transparent background
         self.opaque = NO;
-        self.backgroundColor = [UIColor clearColor];
 		
         // Make invisible for now
         self.alpha = 0.0f;
@@ -272,8 +260,6 @@
 		
         // Add details label
         self.detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
-		
-		taskInProgress = NO;
     }
     return self;
 }
@@ -366,23 +352,23 @@
 		newSize.height = minSize.height;
 	}
 	
-	self.HUDSize = newSize;
+	_HUDSize = newSize;
 }
 
 #pragma mark -
 #pragma mark Showing and execution
 
-- (void)show:(BOOL)animated {
+- (void)show:(BOOL)animated {	
 	NSTimeInterval length = animated ? (1./3.) : 0;
 	NSTimeInterval graceTimeDelay = self.graceTime;
 	self.alpha = 0.0f;
 	
 	if (dimBackground) {
-		oldStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
+		_statusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
 
 		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, graceTimeDelay * NSEC_PER_SEC);
 		dispatch_after(popTime, dispatch_get_main_queue(), ^{
-			[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque animated:YES];
+			[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:YES];
 		});
 	}
 	
@@ -401,6 +387,9 @@
 }
 
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
+	if (!self.superview)
+		return;
+	
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
 	dispatch_after(popTime, dispatch_get_main_queue(), ^{
 		NSTimeInterval length = animated ? (1./3.) : 0;
@@ -409,7 +398,7 @@
 			minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
 		
 		if (dimBackground)
-			[[UIApplication sharedApplication] setStatusBarStyle:oldStatusBarStyle animated:YES];
+			[[UIApplication sharedApplication] setStatusBarStyle:_statusBarStyle animated:YES];
 		
 		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			if (animationType == MBProgressHUDAnimationZoom)
@@ -430,8 +419,6 @@
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	dispatch_async(bgQueue, ^{
-		self.taskInProgress = YES;
-		
 		dispatch_sync(dispatch_get_main_queue(), ^{
 			[self show:YES];
 		});
@@ -440,11 +427,8 @@
 			block();
 		}
 		
-		self.taskInProgress = NO;
-		
 		dispatch_async(dispatch_get_main_queue(), ^{
-			if (self.superview)
-				[self hide:YES];
+			[self hide:YES];
 		});
 	});
 }
@@ -477,9 +461,9 @@
     
     // Draw rounded HUD background rect
 	CGRect boxRect = CGRectZero;
-	boxRect.size = self.HUDSize;
-	boxRect.origin.x = roundf((self.bounds.size.width - self.HUDSize.width) / 2) + self.xOffset;
-	boxRect.origin.y = roundf((self.bounds.size.height - self.HUDSize.height) / 2) + self.yOffset;
+	boxRect.size = _HUDSize;
+	boxRect.origin.x = roundf((self.bounds.size.width - _HUDSize.width) / 2) + self.xOffset;
+	boxRect.origin.y = roundf((self.bounds.size.height - _HUDSize.height) / 2) + self.yOffset;
 	
 	// Corner radius
 	CGFloat radius = 10.0f;

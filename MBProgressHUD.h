@@ -179,16 +179,6 @@ typedef enum {
 @property (nonatomic) NSTimeInterval minShowTime;
 
 /**
- * Indicates that the executed operation is in progress. Needed for correct graceTime operation.
- * If you don't set a graceTime (different than 0.0) this does nothing.
- * This property is automatically set when using showWhileExecuting:onTarget:withObject:animated:.
- * When threading is done outside of the HUD (i.e., when the show: and hide: methods are used directly),
- * you need to set this property when your task starts and completes in order to have normal graceTime 
- * functunality.
- */
-@property (nonatomic, getter = isTaskInProgress) BOOL taskInProgress;
-
-/**
  * Removes the HUD from it's parent view when hidden. 
  * Defaults to NO. 
  */
