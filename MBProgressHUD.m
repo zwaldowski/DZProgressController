@@ -13,7 +13,8 @@
 @property (nonatomic) CGFloat progress;
 @end
 
-@interface MBProgressHUD () {	
+@interface MBProgressHUD () {
+	UIStatusBarStyle oldStatusBarStyle;
 	BOOL useAnimation;
 }
 
@@ -375,6 +376,15 @@
 	NSTimeInterval graceTimeDelay = self.graceTime;
 	self.alpha = 0.0f;
 	
+	if (dimBackground) {
+		oldStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
+
+		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, graceTimeDelay * NSEC_PER_SEC);
+		dispatch_after(popTime, dispatch_get_main_queue(), ^{
+			[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque animated:YES];
+		});
+	}
+	
 	[UIView animateWithDuration:length delay:graceTimeDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 		if (animationType == MBProgressHUDAnimationZoom) {
 			self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(1.5f, 1.5f));
@@ -397,6 +407,8 @@
 		if (showStarted)
 			minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
 		
+		if (dimBackground)
+			[[UIApplication sharedApplication] setStatusBarStyle:oldStatusBarStyle animated:YES];
 		
 		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			if (animationType == MBProgressHUDAnimationZoom)
