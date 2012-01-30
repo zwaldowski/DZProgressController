@@ -390,22 +390,26 @@
 }
 
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
-	NSTimeInterval length = animated ? (1./3.) : 0;
-	NSTimeInterval minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
-	if (minimumShowDelay)
-		delay += minimumShowDelay;
-	
-	[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
-		if (animationType == MBProgressHUDAnimationZoom)
-            self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(0.5f, 0.5f));
-        self.alpha = 0.0f;
-	} completion:^(BOOL finished) {
-		if ([delegate respondsToSelector:@selector(HUDWasHidden:)])
-			[delegate HUDWasHidden:self];
+	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
+	dispatch_after(popTime, dispatch_get_main_queue(), ^{
+		NSTimeInterval length = animated ? (1./3.) : 0;
+		NSTimeInterval minimumShowDelay = 0.0;
+		if (showStarted)
+			minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
 		
-		if (removeFromSuperViewOnHide)
-			[self removeFromSuperview];
-	}];
+		
+		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
+			if (animationType == MBProgressHUDAnimationZoom)
+				self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(0.5f, 0.5f));
+			self.alpha = 0.0f;
+		} completion:^(BOOL finished) {
+			if ([delegate respondsToSelector:@selector(HUDWasHidden:)])
+				[delegate HUDWasHidden:self];
+			
+			if (removeFromSuperViewOnHide)
+				[self removeFromSuperview];
+		}];
+	});
 }
 
 - (void)showWhileExecuting:(dispatch_block_t)block {
