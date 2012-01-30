@@ -14,36 +14,20 @@
 @end
 
 @interface MBProgressHUD () {	
-	SEL methodForExecution;
-	id targetForExecution;
-	id objectForExecution;
-	
 	BOOL useAnimation;
 }
 
-- (void)hideUsingAnimation:(BOOL)animated;
-- (void)showUsingAnimation:(BOOL)animated;
-- (void)done;
 - (void)updateLabelText:(NSString *)newText;
 - (void)updateDetailsLabelText:(NSString *)newText;
 - (void)updateProgress;
 - (void)updateIndicators;
-- (void)handleGraceTimer:(NSTimer *)theTimer;
-- (void)handleMinShowTimer:(NSTimer *)theTimer;
 - (void)setTransformForCurrentOrientation:(BOOL)animated;
-- (void)cleanUp;
-- (void)launchExecution;
 - (void)deviceOrientationDidChange:(NSNotification *)notification;
-- (void)hideDelayed:(NSNumber *)animated;
-- (void)launchExecution;
-- (void)cleanUp;
 
 @property (nonatomic, strong) UILabel *label;
 @property (nonatomic, strong) UILabel *detailsLabel;
 
 @property (nonatomic, strong) UIView *indicator;
-@property (nonatomic, strong) NSTimer *graceTimer;
-@property (nonatomic, strong) NSTimer *minShowTimer;
 @property (nonatomic, strong) NSDate *showStarted;
 
 @property (nonatomic) float width;
@@ -82,8 +66,6 @@
 
 @synthesize graceTime;
 @synthesize minShowTime;
-@synthesize graceTimer;
-@synthesize minShowTimer;
 @synthesize taskInProgress;
 @synthesize removeFromSuperViewOnHide;
 
@@ -419,155 +401,74 @@
 #pragma mark Showing and execution
 
 - (void)show:(BOOL)animated {
-	useAnimation = animated;
+	NSTimeInterval length = animated ? (1./3.) : 0;
+	NSTimeInterval graceTimeDelay = self.graceTime;
+	self.alpha = 0.0f;
 	
-	// If the grace time is set postpone the HUD display
-	if (self.graceTime > 0.0) {
-		self.graceTimer = [NSTimer scheduledTimerWithTimeInterval:self.graceTime 
-														   target:self 
-														 selector:@selector(handleGraceTimer:) 
-														 userInfo:nil 
-														  repeats:NO];
-	} 
-	// ... otherwise show the HUD imediately 
-	else {
-		[self setNeedsDisplay];
-		[self showUsingAnimation:useAnimation];
-	}
-}
-
-- (void)hide:(BOOL)animated {
-	useAnimation = animated;
-	
-	// If the minShow time is set, calculate how long the hud was shown,
-	// and pospone the hiding operation if necessary
-	if (self.minShowTime > 0.0 && showStarted) {
-		NSTimeInterval interv = [[NSDate date] timeIntervalSinceDate:showStarted];
-		if (interv < self.minShowTime) {
-			self.minShowTimer = [NSTimer scheduledTimerWithTimeInterval:(self.minShowTime - interv) 
-																 target:self 
-															   selector:@selector(handleMinShowTimer:) 
-															   userInfo:nil 
-																repeats:NO];
-			return;
-		} 
-	}
-	
-	// ... otherwise hide the HUD immediately
-    [self hideUsingAnimation:useAnimation];
-}
-
-- (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
-	[self performSelector:@selector(hideDelayed:) withObject:[NSNumber numberWithBool:animated] afterDelay:delay];
-}
-
-- (void)hideDelayed:(NSNumber *)animated {
-	[self hide:[animated boolValue]];
-}
-
-- (void)handleGraceTimer:(NSTimer *)theTimer {
-	// Show the HUD only if the task is still running
-	if (taskInProgress) {
-		[self setNeedsDisplay];
-		[self showUsingAnimation:useAnimation];
-	}
-}
-
-- (void)handleMinShowTimer:(NSTimer *)theTimer {
-	[self hideUsingAnimation:useAnimation];
-}
-
-- (void)showWhileExecuting:(SEL)method onTarget:(id)target withObject:(id)object animated:(BOOL)animated {
-    methodForExecution = method;
-    targetForExecution = target;
-    objectForExecution = object;	
-    
-    // Launch execution in new thread
-	taskInProgress = YES;
-    [NSThread detachNewThreadSelector:@selector(launchExecution) toTarget:self withObject:nil];
-	
-	// Show HUD view
-	[self show:animated];
-}
-
-- (void)launchExecution {
-	@autoreleasepool {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-		// Start executing the requested task
-		[targetForExecution performSelector:methodForExecution withObject:objectForExecution];
-#pragma clang diagnostic pop
-		// Task completed, update view in main thread (note: view operations should
-		// be done only in the main thread)
-		[self performSelectorOnMainThread:@selector(cleanUp) withObject:nil waitUntilDone:NO];
-	}
-}
-
-- (void)animationFinished:(NSString *)animationID finished:(BOOL)finished context:(void*)context {
-    [self done];
-}
-
-- (void)done {
-    // If delegate was set make the callback
-    self.alpha = 0.0f;
-    
-	if(delegate && [delegate respondsToSelector:@selector(HUDWasHidden:)])
-		[delegate HUDWasHidden:self];
-	
-	if (removeFromSuperViewOnHide)
-		[self removeFromSuperview];
-}
-
-- (void)cleanUp {
-	taskInProgress = NO;
-	
-	self.indicator = nil;
-	
-    [self hide:useAnimation];
-}
-
-#pragma mark -
-#pragma mark Fade in and Fade out
-
-- (void)showUsingAnimation:(BOOL)animated {
-    self.alpha = 0.0f;
-    
-    
-	self.showStarted = [NSDate date];
-    // Fade in
-    if (animated) {
-        [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.30];
-        self.alpha = 1.0f;
+	[UIView animateWithDuration:length delay:graceTimeDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 		if (animationType == MBProgressHUDAnimationZoom) {
 			self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(1.5f, 1.5f));
 		}
-        [UIView commitAnimations];
-    }
-    else {
-        self.alpha = 1.0f;
-    }
+		self.alpha = 1.0f;
+	} completion:^(BOOL finished) {
+		self.showStarted = [NSDate date];
+	}];
 }
 
-- (void)hideUsingAnimation:(BOOL)animated {
-    // Fade out
-    if (animated) {
-        [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.30];
-        [UIView setAnimationDelegate:self];
-        [UIView setAnimationDidStopSelector:@selector(animationFinished: finished: context:)];
-        // 0.02 prevents the hud from passing through touches during the animation the hud will get completely hidden
-        // in the done method
-        if (animationType == MBProgressHUDAnimationZoom) {
+- (void)hide:(BOOL)animated {
+	[self hide:animated afterDelay:0.0];
+}
+
+- (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
+	NSTimeInterval length = animated ? (1./3.) : 0;
+	NSTimeInterval minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
+	if (minimumShowDelay)
+		delay += minimumShowDelay;
+	
+	[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		if (animationType == MBProgressHUDAnimationZoom)
             self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(0.5f, 0.5f));
-        }
-        self.alpha = 0.02f;
-        [UIView commitAnimations];
-    }
-    else {
         self.alpha = 0.0f;
-        [self done];
-    }
+	} completion:^(BOOL finished) {
+		if ([delegate respondsToSelector:@selector(HUDWasHidden:)])
+			[delegate HUDWasHidden:self];
+		
+		if (removeFromSuperViewOnHide)
+			[self removeFromSuperview];
+	}];
+}
+
+- (void)showWhileExecuting:(dispatch_block_t)block animated:(BOOL)animated {
+	if (!block) return;
+	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_async(bgQueue, ^{
+		self.taskInProgress = YES;
+		
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[self show:animated];
+		});
+		
+		@autoreleasepool {
+			block();
+		}
+		
+		self.taskInProgress = NO;
+		
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if (self.superview)
+				[self hide:animated];
+		});
+	});
+}
+
+- (void)showWhileExecuting:(SEL)method onTarget:(id)target withObject:(id)object animated:(BOOL)animated {
+	[self showWhileExecuting:^{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+		[target performSelector:method withObject:object];
+#pragma clang diagnostic pop
+	} animated:animated];
 }
 
 #pragma mark BG Drawing
@@ -652,14 +553,11 @@
 		if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
 		else { degrees = 0; }
 	}
-
-	if (animated) {
-		[UIView beginAnimations:nil context:nil];
-	}
-	self.transform = CGAffineTransformMakeRotation(RADIANS(degrees));
-	if (animated) {
-		[UIView commitAnimations];
-	}
+	
+	NSTimeInterval animationLength = animated ? (1./3.) : 0;
+	[UIView animateWithDuration:animationLength animations:^{
+		self.transform = CGAffineTransformMakeRotation(RADIANS(degrees));
+	}];
 }
 
 @end
