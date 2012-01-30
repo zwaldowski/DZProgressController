@@ -60,7 +60,6 @@
 @synthesize xOffset;
 @synthesize yOffset;
 @synthesize minSize;
-@synthesize square;
 @synthesize margin;
 @synthesize dimBackground;
 
@@ -258,7 +257,6 @@
 		self.minShowTime = 0.0f;
 		self.removeFromSuperViewOnHide = NO;
 		self.minSize = CGSizeZero;
-		self.square = NO;
 		
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 		
@@ -377,14 +375,6 @@
         }
     }
 	
-	if (square) {
-		CGFloat max = MAX(self.width, self.height);
-		if (max <= frame.size.width - 2*margin) {
-			self.width = max;
-		}
-		if (max <= frame.size.height - 2*margin) {
-			self.height = max;
-		}
 	}
 	
 	if (self.width < minSize.width) {

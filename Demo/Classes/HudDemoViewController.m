@@ -70,7 +70,6 @@
 	HUD.removeFromSuperViewOnHide = YES;
     HUD.labelText = @"Loading";
     HUD.detailsLabelText = @"updating data";
-	HUD.square = YES;
 	
     [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
 }

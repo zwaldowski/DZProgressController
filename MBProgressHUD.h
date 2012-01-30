@@ -214,11 +214,6 @@ typedef enum {
  */
 @property (nonatomic) CGSize minSize;
 
-/**
- * Force the HUD dimensions to be equal if possible. 
- */
-@property (nonatomic, getter = isSquare) BOOL square;
-
 /** 
  * Display the HUD. You need to make sure that the main thread completes its run loop soon after this method call so
  * the user interface can be updated. Call this method when your task is already set-up to be executed in a new thread
