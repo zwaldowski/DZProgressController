@@ -144,6 +144,11 @@ typedef enum {
  */
 @property (nonatomic) CGFloat progress;
 
+/**
+ * The minimum size of the HUD bezel. Defaults to CGSizeZero.
+ */
+@property (nonatomic) CGSize minSize;
+
 /** 
  * Display the HUD. You need to make sure that the main thread completes its run loop soon after this method call so
  * the user interface can be updated. Call this method when your task is already set-up to be executed in a new thread
@@ -157,11 +162,6 @@ typedef enum {
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.
  */
-/**
- * The minimum size of the HUD bezel. Defaults to CGSizeZero.
- */
-@property (nonatomic) CGSize minSize;
-
 - (void)show:(BOOL)animated;
 
 /** 

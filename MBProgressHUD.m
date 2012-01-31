@@ -55,8 +55,8 @@ static char kDetailLabelTextContext;
 
 @synthesize label, detailLabel;
 
-
 @synthesize minSize;
+
 @synthesize indicator;
 @synthesize customView;
 
@@ -303,6 +303,13 @@ static char kDetailLabelTextContext;
 	label.frame = lFrame;
 	detailLabel.frame = dFrame;
 	indicator.frame = indFrame;
+	
+	if (newSize.width < minSize.width)
+		newSize.width = minSize.width;
+	
+	if (newSize.height < minSize.height)
+		newSize.height = minSize.height;
+		
 	_HUDSize = newSize;
 }
 
@@ -322,15 +329,6 @@ static char kDetailLabelTextContext;
 		self.alpha = 1.0f;
 	} completion:^(BOOL finished) {
 		self.showStarted = [NSDate date];
-	
-	if (newSize.width < minSize.width) {
-		newSize.width = minSize.width;
-	} 
-	
-	if (newSize.height < minSize.height) {
-		newSize.height = minSize.height;
-	}
-	
 	}];
 }
 
