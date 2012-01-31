@@ -11,33 +11,13 @@
 
 @implementation HudDemoViewController
 
-#pragma mark -
-#pragma mark Constants
-
-#pragma mark -
-#pragma mark Lifecycle methods
-
-- (void)viewDidLoad {
-	UIView *content = [[self.view subviews] objectAtIndex:0];
-	((UIScrollView *)self.view).contentSize = content.bounds.size;
-}
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning]; // Releases the view if it doesn't have a superview
-    // Release anything that's not essential, such as cached data
-}
+#pragma mark - View controller
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return YES;	
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-	UIView *content = [[self.view subviews] objectAtIndex:0];
-	((UIScrollView *)self.view).contentSize = content.bounds.size;
-}
-
-#pragma mark -
-#pragma mark IBActions
+#pragma mark - Actions
 
 - (IBAction)showSimple:(id)sender {
     // The hud will dispable all input on the view (use the higest view possible in the view hierarchy)
@@ -170,7 +150,6 @@
 	HUD = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
 }
 
-
 - (IBAction)showWithGradient:(id)sender {
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
@@ -227,8 +206,7 @@
 	sleep(2);
 }
 
-#pragma mark -
-#pragma mark NSURLConnectionDelegete
+#pragma mark - NSURLConnectionDelegete
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	expectedLength = [response expectedContentLength];
