@@ -7,6 +7,7 @@
 //
 
 #import "HudDemoViewController.h"
+#import "MBProgressHUD.h"
 #import <unistd.h>
 
 @implementation HudDemoViewController
@@ -87,9 +88,7 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
-	// The sample image is based on the work by http://www.pixelpressicons.com, http://creativecommons.org/licenses/by/2.5/ca/
-	// Make the customViews 37 by 37 pixels for best results (those are the bounds of the build-in progress indicators)
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"37x-Checkmark.png"]];
+	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
 	
     // Set custom view mode
     HUD.mode = MBProgressHUDModeCustomView;
@@ -198,9 +197,7 @@
     HUD.mode = MBProgressHUDModeIndeterminate;
     HUD.label.text = @"Cleaning up";
     sleep(2);
-	// The sample image is based on the work by www.pixelpressicons.com, http://creativecommons.org/licenses/by/2.5/ca/
-	// Make the customViews 37 by 37 pixels for best results (those are the bounds of the build-in progress indicators)
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"37x-Checkmark.png"]];
+	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
 	HUD.mode = MBProgressHUDModeCustomView;
 	HUD.label.text = @"Completed";
 	sleep(2);
@@ -220,7 +217,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"37x-Checkmark.png"]];
+	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
     HUD.mode = MBProgressHUDModeCustomView;
 	[HUD hide:YES afterDelay:2];
 }

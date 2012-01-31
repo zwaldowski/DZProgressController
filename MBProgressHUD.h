@@ -5,6 +5,8 @@
 // This code is licensed under MIT. See LICENSE for more information. 
 //
 
+#import <UIKit/UIKit.h>
+
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
     MBProgressHUDModeIndeterminate,

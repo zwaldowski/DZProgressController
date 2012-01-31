@@ -6,7 +6,9 @@
 //  Copyright bukovinski.com 2009. All rights reserved.
 //
 
-#import "MBProgressHUD.h"
+#import <UIKit/UIKit.h>
+
+@class MBProgressHUD;
 
 @interface HudDemoViewController : UIViewController {
 	MBProgressHUD *HUD;
