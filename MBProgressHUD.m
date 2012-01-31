@@ -26,7 +26,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	CGAffineTransform _rotationTransform;
 }
 
-- (void)updateProgress;
 - (void)updateIndicators;
 - (void)deviceOrientationDidChange:(NSNotification *)notification;
 
@@ -41,7 +40,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
-static const CGFloat opacity = 0.9f;
+static const CGFloat opacity = 0.85f;
 static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
@@ -65,7 +64,6 @@ static char kDetailLabelContext;
 @synthesize showStarted;
 
 @synthesize removeFromSuperViewOnHide;
-@synthesize progress;
 
 - (void)setMode:(MBProgressHUDMode)newMode {
     // Dont change mode if it wasn't actually changed to prevent flickering
@@ -86,18 +84,22 @@ static char kDetailLabelContext;
 	}
 }
 
-- (void)setProgress:(float)newProgress {
-    progress = newProgress;
+- (CGFloat)progress {
+    if (mode != MBProgressHUDModeDeterminate)
+		return 0.0f;
 	
-    // Update display ony if showing the determinate progress view
+	return [(MBRoundProgressView *)indicator progress];
+}
+
+- (void)setProgress:(CGFloat)newProgress {
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	if ([NSThread isMainThread]) {
-		[self updateProgress];
-	} else {
-		[self performSelectorOnMainThread:@selector(updateProgress) withObject:nil waitUntilDone:NO];
-	}
+	dispatch_always_main_queue(^{
+		if (![indicator isKindOfClass:[MBRoundProgressView class]])
+			return;
+		[(MBRoundProgressView *)indicator setProgress:newProgress];
+	});
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
