@@ -357,6 +357,8 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		newIndicator = view;
 	}
 	
+	_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
+	
 	dispatch_always_main_queue(^{
 		if (indicator)
 			[indicator removeFromSuperview];

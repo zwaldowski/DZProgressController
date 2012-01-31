@@ -147,6 +147,7 @@
 	[connection start];
 	
 	HUD = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
+	HUD.minimumShowTime = 2.0;
 }
 
 - (IBAction)showWithGradient:(id)sender {
@@ -213,13 +214,13 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
 	currentLength += [data length];
-	HUD.progress = currentLength / (float)expectedLength;
+	HUD.progress = currentLength / (CGFloat)expectedLength;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 	HUD.customView = MBProgressHUDSuccessImageView;
     HUD.mode = MBProgressHUDModeCustomView;
-	[HUD hide:YES afterDelay:2];
+	[HUD hide:YES];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
