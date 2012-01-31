@@ -33,6 +33,8 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	CGAffineTransform _rotationTransform;
 	NSTimeInterval _showStarted;
 	__weak UIView *indicator;
+	__weak UILabel *label;
+	__weak UILabel *detailLabel;
 }
 
 #pragma mark Accessors
@@ -40,8 +42,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 @synthesize mode;
 
 @synthesize wasHiddenBlock;
-
-@synthesize label, detailLabel;
 
 @synthesize minSize;
 
@@ -378,6 +378,19 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		
 		[self setNeedsLayout];
 	});
+}
+
+- (void)setCustomView:(UIView *)newCustomView {
+	if ([newCustomView isEqual:customView])
+		return;
+	
+	customView = newCustomView;
+	
+	if (mode != MBProgressHUDModeCustomView)
+		return;
+	
+	mode = MBProgressHUDModeIndeterminate;
+	self.mode = MBProgressHUDModeCustomView;
 }
 
 - (CGFloat)progress {
