@@ -1,16 +1,11 @@
 //
 //  MBProgressHUD.h
-//  Version 0.4
 //  Created by Matej Bukovinski on 2.4.09.
 //
 // This code is licensed under MIT. See LICENSE for more information. 
 //
 
-#import <UIKit/UIKit.h>
-
 @protocol MBProgressHUDDelegate;
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
@@ -20,8 +15,6 @@ typedef enum {
 	/** Shows a custom view */
 	MBProgressHUDModeCustomView
 } MBProgressHUDMode;
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 
 /** 
  * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
@@ -86,7 +79,7 @@ typedef enum {
 - (id)initWithView:(UIView *)view;
 
 /**
- * The UIView (i.g., a UIIMageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
+ * The UIView (i.g., a UIImageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
  * For best results use a 37 by 37 pixel view (so the bounds match the build in indicator bounds). 
  */
 @property (nonatomic, strong) UIView *customView;
@@ -197,7 +190,7 @@ typedef enum {
 
 @end
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 
 @protocol MBProgressHUDDelegate <NSObject>
 
@@ -207,5 +200,17 @@ typedef enum {
  * Called after the HUD was fully hidden from the screen. 
  */
 - (void)HUDWasHidden:(MBProgressHUD *)hud;
+
+@end
+
+#pragma mark -
+
+/**
+ * A progress view for showing definite progress by filling up a circle (pie chart).
+ */
+
+@interface MBRoundProgressView : UIView
+
+@property (nonatomic) CGFloat progress;
 
 @end

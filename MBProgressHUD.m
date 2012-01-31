@@ -8,33 +8,7 @@
 
 #import "MBProgressHUD.h"
 
-static void dispatch_always_main_queue(dispatch_block_t block) {
-	if ([NSThread isMainThread])
-		block();
-	else
-		dispatch_async(dispatch_get_main_queue(), block);
-}
-
-// A progress view for showing definite progress by filling up a circle (pie chart).
-@interface MBRoundProgressView : UIView
-@property (nonatomic) CGFloat progress;
-@end
-
-@interface MBProgressHUD () {
-	UIStatusBarStyle _statusBarStyle;
-	CGSize _HUDSize;
-	CGAffineTransform _rotationTransform;
-	NSTimeInterval _showStarted;
-	__weak UIView *indicator;
-}
-
-- (void)reloadOrientation:(NSNotification *)notification;
-
-@end
-
-@implementation MBProgressHUD
-
-#pragma mark Constants
+#pragma mark Constants and Functions
 
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
@@ -44,7 +18,24 @@ static const CGFloat radius = 10.0f;
 static char kLabelContext;
 static char kDetailLabelContext;
 
-#pragma mark - Accessors
+static void dispatch_always_main_queue(dispatch_block_t block) {
+	if ([NSThread isMainThread])
+		block();
+	else
+		dispatch_async(dispatch_get_main_queue(), block);
+}
+
+#pragma mark -
+
+@implementation MBProgressHUD {
+	UIStatusBarStyle _statusBarStyle;
+	CGSize _HUDSize;
+	CGAffineTransform _rotationTransform;
+	NSTimeInterval _showStarted;
+	__weak UIView *indicator;
+}
+
+#pragma mark Accessors
 
 @synthesize mode;
 
@@ -61,127 +52,7 @@ static char kDetailLabelContext;
 
 @synthesize removeFromSuperViewOnHide;
 
-- (void)setMode:(MBProgressHUDMode)newMode {
-    // Dont change mode if it wasn't actually changed to prevent flickering
-    if (mode && (mode == newMode)) {
-        return;
-    }
-	
-    mode = newMode;
-	
-	UIView *newIndicator = nil;
-	
-	if (mode == MBProgressHUDModeDeterminate) {
-		newIndicator = [MBRoundProgressView new];
-	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
-		newIndicator = self.customView;
-	} else {
-		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-		[view startAnimating];
-		newIndicator = view;
-	}
-	
-	dispatch_always_main_queue(^{
-		if (indicator)
-			[indicator removeFromSuperview];
-		
-		[self addSubview:newIndicator];
-		
-		if (mode == MBProgressHUDModeIndeterminate)
-			[(id)newIndicator startAnimating];
-		
-		indicator = newIndicator;
-		
-		[self setNeedsLayout];
-	});
-}
-
-- (CGFloat)progress {
-    if (mode != MBProgressHUDModeDeterminate)
-		return 0.0f;
-	
-	return [(MBRoundProgressView *)indicator progress];
-}
-
-- (void)setProgress:(CGFloat)newProgress {
-    if (mode != MBProgressHUDModeDeterminate)
-		return;
-	
-	dispatch_always_main_queue(^{
-		if (![indicator isKindOfClass:[MBRoundProgressView class]])
-			return;
-		[(MBRoundProgressView *)indicator setProgress:newProgress];
-		[indicator setNeedsDisplay];
-	});
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if (context == &kLabelContext || context == &kDetailLabelContext) {
-		dispatch_always_main_queue(^{
-			[self setNeedsLayout];
-			[object setNeedsDisplay];
-		});
-		
-		return;
-	}
-	[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-}
-
-- (UILabel *)label {
-	if (!label) {
-		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
-		newLabel.font = [UIFont boldSystemFontOfSize:16.0f];
-		newLabel.adjustsFontSizeToFitWidth = NO;
-        newLabel.textAlignment = UITextAlignmentCenter;
-        newLabel.opaque = NO;
-        newLabel.backgroundColor = [UIColor clearColor];
-        newLabel.textColor = [UIColor whiteColor];
-		newLabel.numberOfLines = 0;
-		newLabel.lineBreakMode = UILineBreakModeClip;
-		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelContext];
-		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kLabelContext];
-		[self addSubview:newLabel];
-		label = newLabel;
-	}
-	return label;
-}
-
-- (UILabel *)detailLabel {
-	if (!detailLabel) {
-		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
-        newLabel.font = [UIFont boldSystemFontOfSize:12.0f];
-		newLabel.adjustsFontSizeToFitWidth = NO;
-		newLabel.textAlignment = UITextAlignmentCenter;
-		newLabel.opaque = NO;
-        newLabel.backgroundColor = [UIColor clearColor];
-		newLabel.textColor = [UIColor whiteColor];
-		newLabel.numberOfLines = 0;
-		newLabel.lineBreakMode = UILineBreakModeClip;
-		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[self addSubview:newLabel];
-		detailLabel = newLabel;
-	}
-	return detailLabel;
-}
-
-- (void)dealloc {
-	[label removeObserver:self forKeyPath:@"text"];
-	[label removeObserver:self forKeyPath:@"font"];
-	[label removeObserver:self forKeyPath:@"textColor"];
-	[label removeObserver:self forKeyPath:@"textAlignment"];
-	[detailLabel removeObserver:self forKeyPath:@"text"];
-	[detailLabel removeObserver:self forKeyPath:@"font"];
-	[detailLabel removeObserver:self forKeyPath:@"textColor"];
-	[detailLabel removeObserver:self forKeyPath:@"textAlignment"];
-}
-
-#pragma mark -
-#pragma mark Class methods
+#pragma mark - Class methods
 
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
 	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:view];
@@ -208,8 +79,64 @@ static char kDetailLabelContext;
 }
 
 
-#pragma mark -
-#pragma mark Lifecycle methods
+
+#pragma mark - Internal notifications
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+	if (context == &kLabelContext || context == &kDetailLabelContext) {
+		if (self.superview) {
+			dispatch_always_main_queue(^{
+				[self setNeedsLayout];
+				[object setNeedsDisplay];
+			});
+		}
+		
+		return;
+	}
+	[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+}
+
+- (void)reloadOrientation:(NSNotification *)notification { 
+	if (!self.superview)
+		return;
+	
+	if ([self.superview isKindOfClass:[UIWindow class]]) {
+		UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+		NSInteger degrees = 0;
+		
+		// Stay in sync with the superview
+		if (self.superview) {
+			self.bounds = self.superview.bounds;
+			[self setNeedsDisplay];
+		}
+		
+		if (UIInterfaceOrientationIsLandscape(orientation)) {
+			if (orientation == UIInterfaceOrientationLandscapeLeft) { degrees = -90; } 
+			else { degrees = 90; }
+			// Window coordinates differ!
+			self.bounds = CGRectMake(0, 0, self.bounds.size.height, self.bounds.size.width);
+		} else {
+			if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
+			else { degrees = 0; }
+		}
+		
+		_rotationTransform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
+		
+		if (!notification) {
+			self.transform = _rotationTransform;
+			return;
+		}
+		
+		[UIView animateWithDuration:(1./3.) animations:^{
+			self.transform = _rotationTransform;
+		}];
+	} else {
+		self.bounds = self.superview.bounds;
+		[self setNeedsDisplay];
+	}
+}
+
+#pragma mark - Setup and teardown
 
 - (id)initWithWindow:(UIWindow *)window {
     return [self initWithView:window];
@@ -224,11 +151,6 @@ static char kDetailLabelContext;
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
 	}
 	return self;
-}
-
-- (void)removeFromSuperview {
-    [super removeFromSuperview];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -249,73 +171,28 @@ static char kDetailLabelContext;
     return self;
 }
 
-#pragma mark -
-#pragma mark Layout
-
-- (void)layoutSubviews {
-	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
-	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
-	
-	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
-    indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
-	
-    // Add label if label text was set
-    if (label.text.length) {
-		// Compute label dimensions based on font metrics if size is larger than max then clip the label width
-		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
-        CGSize dims = [label.text sizeWithFont:label.font constrainedToSize:maxSize lineBreakMode:label.lineBreakMode];
-		
-        // Update HUD size
-		if (newSize.width < dims.width + 2 * margin)
-            newSize.width = dims.width + 2 * margin;
-        newSize.height += dims.height + padding;
-		
-        // Set the label position and dimensions
-		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		lFrame.origin.y = CGRectGetMaxY(indFrame) - padding;
-		lFrame.size = dims;
-		
-        // Move indicator to make room for the label
-        indFrame.origin.y -= floor(dims.height / 2) + padding;
-    }
-	
-	// Add details label delatils text was set
-	if (detailLabel.text.length) {
-		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
-		CGSize dims = [detailLabel.text sizeWithFont:detailLabel.font constrainedToSize:maxSize lineBreakMode:detailLabel.lineBreakMode];
-		
-		// Update HUD size
-		if (newSize.width < dims.width + 2 * margin)
-			newSize.width = dims.width + 2 * margin;
-		newSize.height += dims.height + padding;
-		
-		// Move indicator to make room for the new label
-		indFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
-		
-		// Move first label to make room for the new label
-		lFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
-		
-		// Set label position and dimensions
-		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		dFrame.origin.y = CGRectGetMaxY(lFrame) + padding * 2;
-		dFrame.size = dims;
-	}
-	
-	label.frame = lFrame;
-	detailLabel.frame = dFrame;
-	indicator.frame = indFrame;
-	
-	if (newSize.width < minSize.width)
-		newSize.width = minSize.width;
-	
-	if (newSize.height < minSize.height)
-		newSize.height = minSize.height;
-		
-	_HUDSize = newSize;
+- (void)dealloc {
+	[label removeObserver:self forKeyPath:@"text"];
+	[label removeObserver:self forKeyPath:@"font"];
+	[label removeObserver:self forKeyPath:@"textColor"];
+	[label removeObserver:self forKeyPath:@"textAlignment"];
+	[detailLabel removeObserver:self forKeyPath:@"text"];
+	[detailLabel removeObserver:self forKeyPath:@"font"];
+	[detailLabel removeObserver:self forKeyPath:@"textColor"];
+	[detailLabel removeObserver:self forKeyPath:@"textAlignment"];
 }
 
 #pragma mark -
-#pragma mark Showing and execution
+#pragma mark Lifecycle methods
+
+
+
+- (void)removeFromSuperview {
+    [super removeFromSuperview];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
+}
+
+#pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
 	[self reloadOrientation:nil];
@@ -382,7 +259,7 @@ static char kDetailLabelContext;
 	});
 }
 
-#pragma mark BG Drawing
+#pragma mark - Layout and drawing
 
 - (void)drawRect:(CGRect)rect {
     CGContextRef context = UIGraphicsGetCurrentContext(); 
@@ -390,9 +267,9 @@ static char kDetailLabelContext;
     // Draw rounded HUD background rect
 	CGRect boxRect = CGRectZero;
 	boxRect.size = _HUDSize;
-	boxRect.origin.x = roundf((self.bounds.size.width - _HUDSize.width) / 2);
-	boxRect.origin.y = roundf((self.bounds.size.height - _HUDSize.height) / 2);
-
+	boxRect.origin.x = roundf((rect.size.width - _HUDSize.width) / 2);
+	boxRect.origin.y = roundf((rect.size.height - _HUDSize.height) / 2);
+	
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, opacity);
     CGContextMoveToPoint(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect));
@@ -404,56 +281,172 @@ static char kDetailLabelContext;
     CGContextFillPath(context);
 }
 
-#pragma mark -
-#pragma mark Manual orientation change
 
-- (void)reloadOrientation:(NSNotification *)notification { 
-	if (!self.superview)
+- (void)layoutSubviews {
+	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
+	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
+	
+	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
+    indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
+	
+    // Add label if label text was set
+    if (label.text.length) {
+		// Compute label dimensions based on font metrics if size is larger than max then clip the label width
+		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
+        CGSize dims = [label.text sizeWithFont:label.font constrainedToSize:maxSize lineBreakMode:label.lineBreakMode];
+		
+        // Update HUD size
+		if (newSize.width < dims.width + 2 * margin)
+            newSize.width = dims.width + 2 * margin;
+        newSize.height += dims.height + padding;
+		
+        // Set the label position and dimensions
+		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
+		lFrame.origin.y = CGRectGetMaxY(indFrame) - padding;
+		lFrame.size = dims;
+		
+        // Move indicator to make room for the label
+        indFrame.origin.y -= floor(dims.height / 2) + padding;
+    }
+	
+	// Add details label delatils text was set
+	if (detailLabel.text.length) {
+		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
+		CGSize dims = [detailLabel.text sizeWithFont:detailLabel.font constrainedToSize:maxSize lineBreakMode:detailLabel.lineBreakMode];
+		
+		// Update HUD size
+		if (newSize.width < dims.width + 2 * margin)
+			newSize.width = dims.width + 2 * margin;
+		newSize.height += dims.height + padding;
+		
+		// Move indicator to make room for the new label
+		indFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
+		
+		// Move first label to make room for the new label
+		lFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
+		
+		// Set label position and dimensions
+		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
+		dFrame.origin.y = CGRectGetMaxY(lFrame) + padding * 2;
+		dFrame.size = dims;
+	}
+	
+	label.frame = lFrame;
+	detailLabel.frame = dFrame;
+	indicator.frame = indFrame;
+	
+	if (newSize.width < minSize.width)
+		newSize.width = minSize.width;
+	
+	if (newSize.height < minSize.height)
+		newSize.height = minSize.height;
+	
+	_HUDSize = newSize;
+}
+
+#pragma mark - Accessors
+
+- (void)setMode:(MBProgressHUDMode)newMode {
+    // Dont change mode if it wasn't actually changed to prevent flickering
+    if (mode && (mode == newMode)) {
+        return;
+    }
+	
+    mode = newMode;
+	
+	UIView *newIndicator = nil;
+	
+	if (mode == MBProgressHUDModeDeterminate) {
+		newIndicator = [MBRoundProgressView new];
+	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
+		newIndicator = self.customView;
+	} else {
+		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+		[view startAnimating];
+		newIndicator = view;
+	}
+	
+	dispatch_always_main_queue(^{
+		if (indicator)
+			[indicator removeFromSuperview];
+		
+		[self addSubview:newIndicator];
+		
+		if (mode == MBProgressHUDModeIndeterminate)
+			[(id)newIndicator startAnimating];
+		
+		indicator = newIndicator;
+		
+		[self setNeedsLayout];
+	});
+}
+
+- (CGFloat)progress {
+    if (mode != MBProgressHUDModeDeterminate)
+		return 0.0f;
+	
+	return [(MBRoundProgressView *)indicator progress];
+}
+
+- (void)setProgress:(CGFloat)newProgress {
+    if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	if ([self.superview isKindOfClass:[UIWindow class]]) {
-		UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-		NSInteger degrees = 0;
-		
-		// Stay in sync with the superview
-		if (self.superview) {
-			self.bounds = self.superview.bounds;
-			[self setNeedsDisplay];
-		}
-		
-		if (UIInterfaceOrientationIsLandscape(orientation)) {
-			if (orientation == UIInterfaceOrientationLandscapeLeft) { degrees = -90; } 
-			else { degrees = 90; }
-			// Window coordinates differ!
-			self.bounds = CGRectMake(0, 0, self.bounds.size.height, self.bounds.size.width);
-		} else {
-			if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
-			else { degrees = 0; }
-		}
-		
-		_rotationTransform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
-		
-		if (!notification) {
-			self.transform = _rotationTransform;
+	dispatch_always_main_queue(^{
+		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
-		}
-		
-		[UIView animateWithDuration:(1./3.) animations:^{
-			self.transform = _rotationTransform;
-		}];
-	} else {
-		self.bounds = self.superview.bounds;
-		[self setNeedsDisplay];
+		[(MBRoundProgressView *)indicator setProgress:newProgress];
+		[indicator setNeedsDisplay];
+	});
+}
+
+- (UILabel *)label {
+	if (!label) {
+		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
+		newLabel.font = [UIFont boldSystemFontOfSize:16.0f];
+		newLabel.adjustsFontSizeToFitWidth = NO;
+        newLabel.textAlignment = UITextAlignmentCenter;
+        newLabel.opaque = NO;
+        newLabel.backgroundColor = [UIColor clearColor];
+        newLabel.textColor = [UIColor whiteColor];
+		newLabel.numberOfLines = 0;
+		newLabel.lineBreakMode = UILineBreakModeClip;
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[self addSubview:newLabel];
+		label = newLabel;
 	}
+	return label;
+}
+
+- (UILabel *)detailLabel {
+	if (!detailLabel) {
+		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
+        newLabel.font = [UIFont boldSystemFontOfSize:12.0f];
+		newLabel.adjustsFontSizeToFitWidth = NO;
+		newLabel.textAlignment = UITextAlignmentCenter;
+		newLabel.opaque = NO;
+        newLabel.backgroundColor = [UIColor clearColor];
+		newLabel.textColor = [UIColor whiteColor];
+		newLabel.numberOfLines = 0;
+		newLabel.lineBreakMode = UILineBreakModeClip;
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[self addSubview:newLabel];
+		detailLabel = newLabel;
+	}
+	return detailLabel;
 }
 
 @end
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 
 @implementation MBRoundProgressView
-
-@synthesize progress;
 
 - (id)init {
     return [self initWithFrame:CGRectMake(0.0f, 0.0f, 37.0f, 37.0f)];
@@ -492,5 +485,7 @@ static char kDetailLabelContext;
     CGContextClosePath(context);
     CGContextFillPath(context);
 }
+
+@synthesize progress;
 
 @end
