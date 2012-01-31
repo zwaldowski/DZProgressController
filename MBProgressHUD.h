@@ -5,8 +5,6 @@
 // This code is licensed under MIT. See LICENSE for more information. 
 //
 
-@protocol MBProgressHUDDelegate;
-
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
     MBProgressHUDModeIndeterminate,
@@ -92,11 +90,10 @@ typedef enum {
  */
 @property (nonatomic) MBProgressHUDMode mode;
 
-/** 
- * The HUD delegate object. If set the delegate will receive HUDWasHidden: callbacks when the HUD was hidden. The
- * delegate should conform to the MBProgressHUDDelegate protocol and implement the HUDWasHidden: method.
+/**
+ * A callback fired when the HUD is hidden.
  */
-@property (nonatomic, weak) id <MBProgressHUDDelegate> delegate;
+@property (nonatomic, weak) void(^wasHiddenBlock)(MBProgressHUD *);
 
 /*
  * Grace period is the time (in seconds) that the invoked method may be run without 
@@ -158,7 +155,7 @@ typedef enum {
 - (void)show:(BOOL)animated;
 
 /** 
- * Hide the HUD. This still calls the HUDWasHidden: delegate. Use it to hide the HUD when your task completes.
+ * Hide the HUD. This still calls the was hidden block. Use it to hide the HUD when your task completes.
  *
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.
@@ -167,12 +164,12 @@ typedef enum {
 - (void)hide:(BOOL)animated;
 
 /** 
- * Hide the HUD after a delay. This still calls the HUDWasHidden: delegate. Use it to hide the HUD when your task completes.
+ * Hide the HUD after a delay. This still calls the was hidden block. Use it to hide the HUD when your task completes.
  *
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
+ * @param animated If set to YES, the HUD will disappear using the current animation type.
  * @param delay Delay in secons until the HUD is hidden.
  * @see hide:
+ * @see wasHiddenBlock
  */
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay;
 
@@ -187,19 +184,6 @@ typedef enum {
  * @param block A code block to be executed while the HUD is shown. This block will be executed in a global background queue.
  */
 - (void)showWhileExecuting:(dispatch_block_t)block;
-
-@end
-
-#pragma mark -
-
-@protocol MBProgressHUDDelegate <NSObject>
-
-@optional
-
-/** 
- * Called after the HUD was fully hidden from the screen. 
- */
-- (void)HUDWasHidden:(MBProgressHUD *)hud;
 
 @end
 

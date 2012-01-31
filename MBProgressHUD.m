@@ -39,7 +39,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 @synthesize mode;
 
-@synthesize delegate;
+@synthesize wasHiddenBlock;
 
 @synthesize label, detailLabel;
 
@@ -47,8 +47,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 @synthesize customView;
 
-@synthesize graceTime;
-@synthesize minShowTime;
+@synthesize graceTime, minShowTime;
 
 @synthesize removeFromSuperViewOnHide;
 
@@ -231,8 +230,8 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
-			if ([delegate respondsToSelector:@selector(HUDWasHidden:)])
-				[delegate HUDWasHidden:self];
+			if (wasHiddenBlock)
+				wasHiddenBlock(self);
 			
 			if (removeFromSuperViewOnHide)
 				[self removeFromSuperview];
