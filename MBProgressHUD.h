@@ -105,19 +105,6 @@ typedef enum {
  */
 @property (nonatomic, weak) id <MBProgressHUDDelegate> delegate;
 
-/** 
- * An optional short message to be displayed below the activity indicator. The HUD is automatically resized to fit
- * the entire text. If the text is too long it will get clipped by displaying "..." at the end. If left unchanged or
- * set to @"", then no message is displayed.
- */
-@property (nonatomic, copy) NSString *labelText;
-
-/** 
- * An optional details message displayed below the labelText message. This message is displayed only if the labelText
- * property is also set and is different from an empty string (@"").
- */
-@property (nonatomic, copy) NSString *detailsLabelText;
-
 /*
  * Grace period is the time (in seconds) that the invoked method may be run without 
  * showing the HUD. If the task finishes befor the grace time runs out, the HUD will
@@ -143,24 +130,19 @@ typedef enum {
 @property (nonatomic) BOOL removeFromSuperViewOnHide;
 
 /** 
- * Font to be used for the main label. Set this property if the default is not adequate. 
+ * A view that displays the text for the main label.
  */
-@property (nonatomic, strong) UIFont *labelFont;
+@property (nonatomic, weak, readonly) UILabel *label;
 
 /** 
- * Font to be used for the details label. Set this property if the default is not adequate. 
+ * A view that displays the text for the detail label.
  */
-@property (nonatomic, strong) UIFont *detailsLabelFont;
+@property (nonatomic, weak, readonly) UILabel *detailLabel;
 
 /** 
  * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 
  */
 @property (nonatomic) CGFloat progress;
-
-/**
- * The minimum size of the HUD bezel. Defaults to CGSizeZero.
- */
-@property (nonatomic) CGSize minSize;
 
 /** 
  * Display the HUD. You need to make sure that the main thread completes its run loop soon after this method call so
@@ -175,6 +157,11 @@ typedef enum {
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.
  */
+/**
+ * The minimum size of the HUD bezel. Defaults to CGSizeZero.
+ */
+@property (nonatomic) CGSize minSize;
+
 - (void)show:(BOOL)animated;
 
 /** 

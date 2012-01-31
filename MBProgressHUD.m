@@ -8,6 +8,12 @@
 
 #import "MBProgressHUD.h"
 
+static void dispatch_always_main_queue(dispatch_block_t block) {
+	if ([NSThread isMainThread])
+		block();
+	else
+		dispatch_async(dispatch_get_main_queue(), block);
+}
 
 // A progress view for showing definite progress by filling up a circle (pie chart).
 @interface MBRoundProgressView : UIView
@@ -20,16 +26,11 @@
 	CGAffineTransform _rotationTransform;
 }
 
-- (void)updateLabelText:(NSString *)newText;
-- (void)updateDetailsLabelText:(NSString *)newText;
 - (void)updateProgress;
 - (void)updateIndicators;
 - (void)deviceOrientationDidChange:(NSNotification *)notification;
 
 @property (nonatomic, strong) UIView *indicator;
-@property (nonatomic, strong) UILabel *label;
-@property (nonatomic, strong) UILabel *detailsLabel;
-
 @property (nonatomic, strong) NSDate *showStarted;
 
 @end
@@ -43,6 +44,8 @@ static const CGFloat margin = 18.0f;
 static const CGFloat opacity = 0.9f;
 static const CGFloat radius = 10.0f;
 
+static char kLabelTextContext;
+static char kDetailLabelTextContext;
 
 #pragma mark - Accessors
 
@@ -50,23 +53,19 @@ static const CGFloat radius = 10.0f;
 
 @synthesize delegate;
 
-@synthesize label, detailsLabel;
-@synthesize labelText, detailsLabelText;
-@synthesize labelFont, detailsLabelFont;
+@synthesize label, detailLabel;
 
-@synthesize indicator;
 
 @synthesize minSize;
+@synthesize indicator;
+@synthesize customView;
 
 @synthesize graceTime;
 @synthesize minShowTime;
-@synthesize removeFromSuperViewOnHide;
-
-@synthesize progress;
-
-@synthesize customView;
-
 @synthesize showStarted;
+
+@synthesize removeFromSuperViewOnHide;
+@synthesize progress;
 
 - (void)setMode:(MBProgressHUDMode)newMode {
     // Dont change mode if it wasn't actually changed to prevent flickering
@@ -87,30 +86,6 @@ static const CGFloat radius = 10.0f;
 	}
 }
 
-- (void)setLabelText:(NSString *)newText {
-	if ([NSThread isMainThread]) {
-		[self updateLabelText:newText];
-		[self setNeedsLayout];
-		[self setNeedsDisplay];
-	} else {
-		[self performSelectorOnMainThread:@selector(updateLabelText:) withObject:newText waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsLayout) withObject:nil waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
-	}
-}
-
-- (void)setDetailsLabelText:(NSString *)newText {
-	if ([NSThread isMainThread]) {
-		[self updateDetailsLabelText:newText];
-		[self setNeedsLayout];
-		[self setNeedsDisplay];
-	} else {
-		[self performSelectorOnMainThread:@selector(updateDetailsLabelText:) withObject:newText waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsLayout) withObject:nil waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
-	}
-}
-
 - (void)setProgress:(float)newProgress {
     progress = newProgress;
 	
@@ -125,20 +100,60 @@ static const CGFloat radius = 10.0f;
 	}
 }
 
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+	if (context == &kLabelTextContext || context == &kDetailLabelTextContext) {
+		dispatch_always_main_queue(^{
+			[self setNeedsLayout];
+		});
+		
+		return;
+	}
+	[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+}
+
+- (UILabel *)label {
+	if (!label) {
+		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
+		newLabel.font = [UIFont boldSystemFontOfSize:16.0f];
+		newLabel.adjustsFontSizeToFitWidth = NO;
+        newLabel.textAlignment = UITextAlignmentCenter;
+        newLabel.opaque = NO;
+        newLabel.backgroundColor = [UIColor clearColor];
+        newLabel.textColor = [UIColor whiteColor];
+		newLabel.numberOfLines = 0;
+		newLabel.lineBreakMode = UILineBreakModeClip;
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelTextContext];
+		[self addSubview:newLabel];
+		label = newLabel;
+	}
+	return label;
+}
+
+- (UILabel *)detailLabel {
+	if (!detailLabel) {
+		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
+        newLabel.font = [UIFont boldSystemFontOfSize:12.0f];
+		newLabel.adjustsFontSizeToFitWidth = NO;
+		newLabel.textAlignment = UITextAlignmentCenter;
+		newLabel.opaque = NO;
+        newLabel.backgroundColor = [UIColor clearColor];
+		newLabel.textColor = [UIColor whiteColor];
+		newLabel.numberOfLines = 0;
+		newLabel.lineBreakMode = UILineBreakModeClip;
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelTextContext];
+		[self addSubview:newLabel];
+		detailLabel = newLabel;
+	}
+	return detailLabel;
+}
+
+- (void)dealloc {
+	[label removeObserver:self forKeyPath:@"text"];
+	[detailLabel removeObserver:self forKeyPath:@"text"];
+}
+
 #pragma mark -
 #pragma mark Accessor helpers
-
-- (void)updateLabelText:(NSString *)newText {
-    if (labelText != newText) {
-        labelText = [newText copy];
-    }
-}
-
-- (void)updateDetailsLabelText:(NSString *)newText {
-    if (detailsLabelText != newText) {
-        detailsLabelText = [newText copy];
-    }
-}
 
 - (void)updateProgress {
 	if (![indicator isKindOfClass:[MBRoundProgressView class]])
@@ -220,10 +235,6 @@ static const CGFloat radius = 10.0f;
 	if (self) {
         // Set default values for properties
         self.mode = MBProgressHUDModeIndeterminate;
-        self.labelText = nil;
-        self.detailsLabelText = nil;
-        self.labelFont = [UIFont boldSystemFontOfSize:16.0f];
-        self.detailsLabelFont = [UIFont boldSystemFontOfSize:12.0f];
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 		
         // Transparent background
@@ -231,12 +242,6 @@ static const CGFloat radius = 10.0f;
 		
         // Make invisible for now
         self.alpha = 0.0f;
-		
-        // Add label
-        self.label = [[UILabel alloc] initWithFrame:self.bounds];
-		
-        // Add details label
-        self.detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
 		
 		_rotationTransform = CGAffineTransformIdentity;
     }
@@ -254,19 +259,10 @@ static const CGFloat radius = 10.0f;
     indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
 	
     // Add label if label text was set
-    if (self.labelText) {		
-        // Set label properties
-        self.label.font = self.labelFont;
-        self.label.adjustsFontSizeToFitWidth = NO;
-        self.label.textAlignment = UITextAlignmentCenter;
-        self.label.opaque = NO;
-        self.label.backgroundColor = [UIColor clearColor];
-        self.label.textColor = [UIColor whiteColor];
-        self.label.text = self.labelText;
-		
+    if (label.text.length) {
 		// Compute label dimensions based on font metrics if size is larger than max then clip the label width
 		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
-        CGSize dims = [self.labelText sizeWithFont:self.labelFont constrainedToSize:maxSize lineBreakMode:UILineBreakModeClip];
+        CGSize dims = [label.text sizeWithFont:label.font constrainedToSize:maxSize lineBreakMode:label.lineBreakMode];
 		
         // Update HUD size
 		if (newSize.width < dims.width + 2 * margin)
@@ -280,25 +276,12 @@ static const CGFloat radius = 10.0f;
 		
         // Move indicator to make room for the label
         indFrame.origin.y -= floor(dims.height / 2) + padding;
-		
-        [self addSubview:label];
     }
 	
 	// Add details label delatils text was set
-	if (self.detailsLabelText) {
-		
-		// Set label properties
-		self.detailsLabel.font = self.detailsLabelFont;
-		self.detailsLabel.adjustsFontSizeToFitWidth = NO;
-		self.detailsLabel.textAlignment = UITextAlignmentCenter;
-		self.detailsLabel.opaque = NO;
-		self.detailsLabel.backgroundColor = [UIColor clearColor];
-		self.detailsLabel.textColor = [UIColor whiteColor];
-		self.detailsLabel.text = self.detailsLabelText;
-		self.detailsLabel.numberOfLines = 0;
-		
+	if (detailLabel.text.length) {
 		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
-		CGSize dims = [self.detailsLabelText sizeWithFont:self.detailsLabelFont constrainedToSize:maxSize lineBreakMode:self.detailsLabel.lineBreakMode];
+		CGSize dims = [detailLabel.text sizeWithFont:detailLabel.font constrainedToSize:maxSize lineBreakMode:detailLabel.lineBreakMode];
 		
 		// Update HUD size
 		if (newSize.width < dims.width + 2 * margin)
@@ -315,22 +298,11 @@ static const CGFloat radius = 10.0f;
 		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
 		dFrame.origin.y = CGRectGetMaxY(lFrame) + padding * 2;
 		dFrame.size = dims;
-		
-		[self addSubview:self.detailsLabel];
 	}
 	
 	label.frame = lFrame;
-	detailsLabel.frame = dFrame;
+	detailLabel.frame = dFrame;
 	indicator.frame = indFrame;
-	
-	if (newSize.width < minSize.width) {
-		newSize.width = minSize.width;
-	} 
-	
-	if (newSize.height < minSize.height) {
-		newSize.height = minSize.height;
-	}
-	
 	_HUDSize = newSize;
 }
 
@@ -350,6 +322,15 @@ static const CGFloat radius = 10.0f;
 		self.alpha = 1.0f;
 	} completion:^(BOOL finished) {
 		self.showStarted = [NSDate date];
+	
+	if (newSize.width < minSize.width) {
+		newSize.width = minSize.width;
+	} 
+	
+	if (newSize.height < minSize.height) {
+		newSize.height = minSize.height;
+	}
+	
 	}];
 }
 

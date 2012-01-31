@@ -59,7 +59,7 @@
 	[self.navigationController.view addSubview:HUD];
 	
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Loading";
+    HUD.label.text = @"Loading";
 	
 	[HUD showWhileExecuting:^{
 		[self myTask];
@@ -71,8 +71,8 @@
     [self.navigationController.view addSubview:HUD];
 	
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Loading";
-    HUD.detailsLabelText = @"updating data";
+    HUD.label.text = @"Loading";
+    HUD.detailLabel.text = @"updating data";
 	
 	[HUD showWhileExecuting:^{
 		[self myTask];
@@ -87,7 +87,7 @@
     HUD.mode = MBProgressHUDModeDeterminate;
     
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Loading";
+    HUD.label.text = @"Loading";
 	
 	// myProgressTask uses the HUD instance to update progress
 	[HUD showWhileExecuting:^{
@@ -108,7 +108,7 @@
     HUD.mode = MBProgressHUDModeCustomView;
 	
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Completed";
+    HUD.label.text = @"Completed";
 	
     [HUD show:YES];
 	[HUD hide:YES afterDelay:3];
@@ -119,7 +119,7 @@
 	[self.navigationController.view addSubview:HUD];
 	
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Connecting";
+    HUD.label.text = @"Connecting";
 	HUD.minSize = CGSizeMake(135.f, 135.f);
 	
 	[HUD showWhileExecuting:^{
@@ -130,7 +130,7 @@
 - (IBAction)showUsingBlocks:(id)sender {
 	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:hud];
-	hud.labelText = @"Loading";
+	hud.label.text = @"Loading";
 	hud.removeFromSuperViewOnHide = YES;
 	[hud showWhileExecuting:^{
 		[self myTask];
@@ -143,7 +143,7 @@
     [self.view.window addSubview:HUD];
 	
 	HUD.removeFromSuperViewOnHide = YES;
-    HUD.labelText = @"Loading";
+    HUD.label.text = @"Loading";
 	
 	[HUD showWhileExecuting:^{
 		[self myTask];
@@ -197,7 +197,7 @@
     sleep(2);
     // Switch to determinate mode
     HUD.mode = MBProgressHUDModeDeterminate;
-    HUD.labelText = @"Progress";
+    HUD.label.text = @"Progress";
     CGFloat progress = 0.0f;
     while (progress < 1.0f)
     {
@@ -207,13 +207,13 @@
     }
     // Back to indeterminate mode
     HUD.mode = MBProgressHUDModeIndeterminate;
-    HUD.labelText = @"Cleaning up";
+    HUD.label.text = @"Cleaning up";
     sleep(2);
 	// The sample image is based on the work by www.pixelpressicons.com, http://creativecommons.org/licenses/by/2.5/ca/
 	// Make the customViews 37 by 37 pixels for best results (those are the bounds of the build-in progress indicators)
 	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"37x-Checkmark.png"]];
 	HUD.mode = MBProgressHUDModeCustomView;
-	HUD.labelText = @"Completed";
+	HUD.label.text = @"Completed";
 	sleep(2);
 }
 
