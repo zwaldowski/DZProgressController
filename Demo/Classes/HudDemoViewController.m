@@ -44,8 +44,10 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
     [self.navigationController.view addSubview:HUD];
 	
-    // Remote it from the window at the right time
-	HUD.removeFromSuperViewOnHide = YES;
+    // Remove it from the window at the right time
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
 	// Show the HUD while the provided block executes in the background
 	[HUD showWhileExecuting:^{
@@ -58,8 +60,10 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
-	HUD.removeFromSuperViewOnHide = YES;
-    HUD.label.text = @"Loading";
+	HUD.label.text = @"Loading";
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
 	[HUD showWhileExecuting:^{
 		[self myTask];
@@ -70,9 +74,11 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
     [self.navigationController.view addSubview:HUD];
 	
-	HUD.removeFromSuperViewOnHide = YES;
-    HUD.label.text = @"Loading";
+	HUD.label.text = @"Loading";
     HUD.detailLabel.text = @"updating data";
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
 	[HUD showWhileExecuting:^{
 		[self myTask];
@@ -85,9 +91,10 @@
 	
     // Set determinate mode
     HUD.mode = MBProgressHUDModeDeterminate;
-    
-	HUD.removeFromSuperViewOnHide = YES;
     HUD.label.text = @"Loading";
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
 	// myProgressTask uses the HUD instance to update progress
 	[HUD showWhileExecuting:^{
@@ -106,9 +113,10 @@
 	
     // Set custom view mode
     HUD.mode = MBProgressHUDModeCustomView;
-	
-	HUD.removeFromSuperViewOnHide = YES;
     HUD.label.text = @"Completed";
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
     [HUD show:YES];
 	[HUD hide:YES afterDelay:3];
@@ -118,9 +126,11 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
-	HUD.removeFromSuperViewOnHide = YES;
     HUD.label.text = @"Connecting";
 	HUD.minSize = CGSizeMake(135.f, 135.f);
+	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
+		[view removeFromSuperview];
+	};
 	
 	[HUD showWhileExecuting:^{
 		[self myMixedTask];
