@@ -44,8 +44,8 @@ static const CGFloat margin = 18.0f;
 static const CGFloat opacity = 0.9f;
 static const CGFloat radius = 10.0f;
 
-static char kLabelTextContext;
-static char kDetailLabelTextContext;
+static char kLabelContext;
+static char kDetailLabelContext;
 
 #pragma mark - Accessors
 
@@ -101,9 +101,10 @@ static char kDetailLabelTextContext;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if (context == &kLabelTextContext || context == &kDetailLabelTextContext) {
+	if (context == &kLabelContext || context == &kDetailLabelContext) {
 		dispatch_always_main_queue(^{
 			[self setNeedsLayout];
+			[object setNeedsDisplay];
 		});
 		
 		return;
@@ -122,7 +123,10 @@ static char kDetailLabelTextContext;
         newLabel.textColor = [UIColor whiteColor];
 		newLabel.numberOfLines = 0;
 		newLabel.lineBreakMode = UILineBreakModeClip;
-		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelTextContext];
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kLabelContext];
 		[self addSubview:newLabel];
 		label = newLabel;
 	}
@@ -140,7 +144,10 @@ static char kDetailLabelTextContext;
 		newLabel.textColor = [UIColor whiteColor];
 		newLabel.numberOfLines = 0;
 		newLabel.lineBreakMode = UILineBreakModeClip;
-		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelTextContext];
+		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
+		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
 		[self addSubview:newLabel];
 		detailLabel = newLabel;
 	}
@@ -149,17 +156,17 @@ static char kDetailLabelTextContext;
 
 - (void)dealloc {
 	[label removeObserver:self forKeyPath:@"text"];
+	[label removeObserver:self forKeyPath:@"font"];
+	[label removeObserver:self forKeyPath:@"textColor"];
+	[label removeObserver:self forKeyPath:@"textAlignment"];
 	[detailLabel removeObserver:self forKeyPath:@"text"];
+	[detailLabel removeObserver:self forKeyPath:@"font"];
+	[detailLabel removeObserver:self forKeyPath:@"textColor"];
+	[detailLabel removeObserver:self forKeyPath:@"textAlignment"];
 }
 
 #pragma mark -
 #pragma mark Accessor helpers
-
-- (void)updateProgress {
-	if (![indicator isKindOfClass:[MBRoundProgressView class]])
-		return;
-	[(MBRoundProgressView *)indicator setProgress:progress];
-}
 
 - (void)updateIndicators {
     if (indicator) {
