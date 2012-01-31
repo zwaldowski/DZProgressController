@@ -24,13 +24,11 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	UIStatusBarStyle _statusBarStyle;
 	CGSize _HUDSize;
 	CGAffineTransform _rotationTransform;
+	NSTimeInterval _showStarted;
+	__weak UIView *indicator;
 }
 
-- (void)updateIndicators;
-- (void)deviceOrientationDidChange:(NSNotification *)notification;
-
-@property (nonatomic, strong) UIView *indicator;
-@property (nonatomic, strong) NSDate *showStarted;
+- (void)reloadOrientation:(NSNotification *)notification;
 
 @end
 
@@ -56,12 +54,10 @@ static char kDetailLabelContext;
 
 @synthesize minSize;
 
-@synthesize indicator;
 @synthesize customView;
 
 @synthesize graceTime;
 @synthesize minShowTime;
-@synthesize showStarted;
 
 @synthesize removeFromSuperViewOnHide;
 
@@ -73,15 +69,31 @@ static char kDetailLabelContext;
 	
     mode = newMode;
 	
-	if ([NSThread isMainThread]) {
-		[self updateIndicators];
-		[self setNeedsLayout];
-		[self setNeedsDisplay];
+	UIView *newIndicator = nil;
+	
+	if (mode == MBProgressHUDModeDeterminate) {
+		newIndicator = [MBRoundProgressView new];
+	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
+		newIndicator = self.customView;
 	} else {
-		[self performSelectorOnMainThread:@selector(updateIndicators) withObject:nil waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsLayout) withObject:nil waitUntilDone:NO];
-		[self performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
+		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+		[view startAnimating];
+		newIndicator = view;
 	}
+	
+	dispatch_always_main_queue(^{
+		if (indicator)
+			[indicator removeFromSuperview];
+		
+		[self addSubview:newIndicator];
+		
+		if (mode == MBProgressHUDModeIndeterminate)
+			[(id)newIndicator startAnimating];
+		
+		indicator = newIndicator;
+		
+		[self setNeedsLayout];
+	});
 }
 
 - (CGFloat)progress {
@@ -99,6 +111,7 @@ static char kDetailLabelContext;
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
+		[indicator setNeedsDisplay];
 	});
 }
 
@@ -168,27 +181,6 @@ static char kDetailLabelContext;
 }
 
 #pragma mark -
-#pragma mark Accessor helpers
-
-- (void)updateIndicators {
-    if (indicator) {
-        [indicator removeFromSuperview];
-    }
-	
-    if (mode == MBProgressHUDModeDeterminate) {
-        self.indicator = [MBRoundProgressView new];
-	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
-        self.indicator = self.customView;
-    } else {
-		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-		[view startAnimating];
-		self.indicator = view;
-	}
-
-    [self addSubview:indicator];
-}
-
-#pragma mark -
 #pragma mark Class methods
 
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
@@ -228,8 +220,8 @@ static char kDetailLabelContext;
 	NSAssert(view, @"The view used in the MBProgressHUD initializer is nil.");
 	if ((self = [self initWithFrame:view.bounds])) {
 		if ([view isKindOfClass:[UIWindow class]])
-			[self deviceOrientationDidChange:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
+			[self reloadOrientation:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
 	}
 	return self;
 }
@@ -326,7 +318,7 @@ static char kDetailLabelContext;
 #pragma mark Showing and execution
 
 - (void)show:(BOOL)animated {
-	[self deviceOrientationDidChange:nil];
+	[self reloadOrientation:nil];
 	self.alpha = 0.0f;
 	self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
 
@@ -337,7 +329,7 @@ static char kDetailLabelContext;
 		self.transform = _rotationTransform;
 		self.alpha = 1.0f;
 	} completion:^(BOOL finished) {
-		self.showStarted = [NSDate date];
+		_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
 	}];
 }
 
@@ -353,8 +345,10 @@ static char kDetailLabelContext;
 	dispatch_after(popTime, dispatch_get_main_queue(), ^{
 		NSTimeInterval length = animated ? (1./3.) : 0;
 		NSTimeInterval minimumShowDelay = 0.0;
-		if (showStarted)
-			minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
+		if (_showStarted) {
+			minimumShowDelay = self.minShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
+			_showStarted = 0.0;
+		}
 		
 		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
@@ -413,7 +407,7 @@ static char kDetailLabelContext;
 #pragma mark -
 #pragma mark Manual orientation change
 
-- (void)deviceOrientationDidChange:(NSNotification *)notification { 
+- (void)reloadOrientation:(NSNotification *)notification { 
 	if (!self.superview)
 		return;
 	
@@ -497,15 +491,6 @@ static char kDetailLabelContext;
     CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
     CGContextClosePath(context);
     CGContextFillPath(context);
-}
-
-- (void)setProgress:(CGFloat)newProgress {
-	if (progress == newProgress)
-		return;
-	
-	progress = newProgress;
-	
-	[self setNeedsDisplay];
 }
 
 @end
