@@ -16,6 +16,7 @@
 @interface MBProgressHUD () {
 	UIStatusBarStyle _statusBarStyle;
 	CGSize _HUDSize;
+	CGAffineTransform _rotationTransform;
 }
 
 - (void)updateLabelText:(NSString *)newText;
@@ -40,7 +41,6 @@
 #pragma mark Accessors
 
 @synthesize mode;
-@synthesize animationType;
 
 @synthesize delegate;
 
@@ -56,7 +56,6 @@
 @synthesize yOffset;
 @synthesize minSize;
 @synthesize margin;
-@synthesize dimBackground;
 
 @synthesize graceTime;
 @synthesize minShowTime;
@@ -237,7 +236,6 @@
     self = [super initWithFrame:frame];
 	if (self) {
         // Set default values for properties
-        self.animationType = MBProgressHUDAnimationFade;
         self.mode = MBProgressHUDModeIndeterminate;
         self.labelText = nil;
         self.detailsLabelText = nil;
@@ -260,6 +258,8 @@
 		
         // Add details label
         self.detailsLabel = [[UILabel alloc] initWithFrame:self.bounds];
+		
+		_rotationTransform = CGAffineTransformIdentity;
     }
     return self;
 }
@@ -359,23 +359,14 @@
 #pragma mark Showing and execution
 
 - (void)show:(BOOL)animated {	
+	self.alpha = 0.0f;
+	self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
+
 	NSTimeInterval length = animated ? (1./3.) : 0;
 	NSTimeInterval graceTimeDelay = self.graceTime;
-	self.alpha = 0.0f;
 	
-	if (dimBackground) {
-		_statusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-
-		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, graceTimeDelay * NSEC_PER_SEC);
-		dispatch_after(popTime, dispatch_get_main_queue(), ^{
-			[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:YES];
-		});
-	}
-	
-	[UIView animateWithDuration:length delay:graceTimeDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
-		if (animationType == MBProgressHUDAnimationZoom) {
-			self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(1.5f, 1.5f));
-		}
+	[UIView animateWithDuration:length delay:graceTimeDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction animations:^{
+		self.transform = _rotationTransform;
 		self.alpha = 1.0f;
 	} completion:^(BOOL finished) {
 		self.showStarted = [NSDate date];
@@ -397,12 +388,8 @@
 		if (showStarted)
 			minimumShowDelay = self.minShowTime - [[NSDate date] timeIntervalSinceDate:showStarted];
 		
-		if (dimBackground)
-			[[UIApplication sharedApplication] setStatusBarStyle:_statusBarStyle animated:YES];
-		
 		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
-			if (animationType == MBProgressHUDAnimationZoom)
-				self.transform = CGAffineTransformConcat(self.transform, CGAffineTransformMakeScale(0.5f, 0.5f));
+			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
 			if ([delegate respondsToSelector:@selector(HUDWasHidden:)])
@@ -436,28 +423,7 @@
 #pragma mark BG Drawing
 
 - (void)drawRect:(CGRect)rect {
-	
-    CGContextRef context = UIGraphicsGetCurrentContext();
-
-    if (dimBackground) {
-        //Gradient colours
-        size_t gradLocationsNum = 2;
-        CGFloat gradLocations[2] = {0.0f, 1.0f};
-        CGFloat gradColors[8] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.75f}; 
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGGradientRef gradient = CGGradientCreateWithColorComponents(colorSpace, gradColors, gradLocations, gradLocationsNum);
-		CGColorSpaceRelease(colorSpace);
-        
-        //Gradient center
-        CGPoint gradCenter= CGPointMake(self.bounds.size.width/2, self.bounds.size.height/2);
-        //Gradient radius
-        float gradRadius = MIN(self.bounds.size.width , self.bounds.size.height) ;
-        //Gradient draw
-        CGContextDrawRadialGradient (context, gradient, gradCenter,
-                                     0, gradCenter, gradRadius,
-                                     kCGGradientDrawsAfterEndLocation);
-		CGGradientRelease(gradient);
-    }    
+    CGContextRef context = UIGraphicsGetCurrentContext(); 
     
     // Draw rounded HUD background rect
 	CGRect boxRect = CGRectZero;
@@ -467,7 +433,7 @@
 	
 	// Corner radius
 	CGFloat radius = 10.0f;
-	
+
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, self.opacity);
     CGContextMoveToPoint(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect));
@@ -514,9 +480,11 @@
 		else { degrees = 0; }
 	}
 	
+	_rotationTransform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
+	
 	NSTimeInterval animationLength = animated ? (1./3.) : 0;
 	[UIView animateWithDuration:animationLength animations:^{
-		self.transform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
+		self.transform = _rotationTransform;
 	}];
 }
 

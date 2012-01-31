@@ -165,8 +165,6 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
-	HUD.dimBackground = YES;
-	
 	// Regiser for HUD callbacks so we can remove it from the window at the right time
 	HUD.removeFromSuperViewOnHide = YES;
 	

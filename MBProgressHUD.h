@@ -21,13 +21,6 @@ typedef enum {
 	MBProgressHUDModeCustomView
 } MBProgressHUDMode;
 
-typedef enum {
-    /** Opacity animation */
-    MBProgressHUDAnimationFade,
-    /** Opacity + scale animation */
-    MBProgressHUDAnimationZoom
-} MBProgressHUDAnimation;
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 /** 
@@ -106,13 +99,6 @@ typedef enum {
  */
 @property (nonatomic) MBProgressHUDMode mode;
 
-/**
- * The animation type that should be used when the HUD is shown and hidden. 
- *
- * @see MBProgressHUDAnimation
- */
-@property (nonatomic) MBProgressHUDAnimation animationType;
-
 /** 
  * The HUD delegate object. If set the delegate will receive HUDWasHidden: callbacks when the HUD was hidden. The
  * delegate should conform to the MBProgressHUDDelegate protocol and implement the HUDWasHidden: method.
@@ -153,11 +139,6 @@ typedef enum {
  * Defaults to 20.0
  */
 @property (nonatomic) CGFloat margin;
-
-/** 
- * Cover the HUD background view with a radial gradient. 
- */
-@property (nonatomic, getter = dimsBackground) BOOL dimBackground;
 
 /*
  * Grace period is the time (in seconds) that the invoked method may be run without 
