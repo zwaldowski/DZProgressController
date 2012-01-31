@@ -96,22 +96,27 @@ typedef enum {
 @property (nonatomic, weak) void(^wasHiddenBlock)(MBProgressHUD *);
 
 /*
- * Grace period is the time (in seconds) that the invoked method may be run without 
- * showing the HUD. If the task finishes befor the grace time runs out, the HUD will
- * not be shown at all. 
- * This may be used to prevent HUD display for very short tasks.
- * Defaults to 0 (no grace time).
- * Grace time functionality is only supported when the task status is known!
- * @see taskInProgress
+ * The show delay is the time (in seconds) that your method may run without the HUD
+ * being shown. If the task finishes before the grace time runs out, the HUD will
+ * not appear at all, usually if you have a very short task.
+ *
+ * Defaults to 0. If you don't set one and still might have a short task,
+ * it is recommended to set a minimum show time instead.
+ *
+ * @see minimumShowTime
  */
-@property (nonatomic) NSTimeInterval graceTime;
+@property (nonatomic) NSTimeInterval showDelayTime;
 
 /**
  * The minimum time (in seconds) that the HUD is shown. 
  * This avoids the problem of the HUD being shown and than instantly hidden.
- * Defaults to 0 (no minimum show time).
+ *
+ * Defaults to 0.0. If you don't set one and your task might run short,
+ * it is recommended to instead set a show delay time.
+ *
+ * @see showDelayTime
  */
-@property (nonatomic) NSTimeInterval minShowTime;
+@property (nonatomic) NSTimeInterval minimumShowTime;
 
 /**
  * Removes the HUD from it's parent view when hidden. 
@@ -140,14 +145,7 @@ typedef enum {
 @property (nonatomic) CGSize minSize;
 
 /** 
- * Display the HUD. You need to make sure that the main thread completes its run loop soon after this method call so
- * the user interface can be updated. Call this method when your task is already set-up to be executed in a new thread
- * (e.g., when using something like NSOperation or calling an asynchronous call like NSUrlRequest).
- *
- * If you need to perform a blocking thask on the main thread, you can try spining the run loop imeidiately after calling this 
- * method by using:
- *
- * [[NSRunLoop currentRunLoop] runUntilDate:[NSDate distantPast]];
+ * Display the HUD.
  *
  * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
  * animations while disappearing.

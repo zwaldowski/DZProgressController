@@ -40,16 +40,11 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark Accessors
 
 @synthesize mode;
-
-@synthesize wasHiddenBlock;
-
 @synthesize minSize;
-
 @synthesize customView;
-
-@synthesize graceTime, minShowTime;
-
+@synthesize wasHiddenBlock;
 @synthesize removeFromSuperViewOnHide;
+@synthesize showDelayTime, minimumShowTime;
 
 #pragma mark - Class methods
 
@@ -76,8 +71,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		return NO;
 	}
 }
-
-
 
 #pragma mark - Internal notifications
 
@@ -181,10 +174,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	[detailLabel removeObserver:self forKeyPath:@"textAlignment"];
 }
 
-#pragma mark -
-#pragma mark Lifecycle methods
-
-
+#pragma mark - Lifecycle methods
 
 - (void)removeFromSuperview {
     [super removeFromSuperview];
@@ -194,19 +184,19 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	[self reloadOrientation:nil];
-	self.alpha = 0.0f;
-	self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
-
-	NSTimeInterval length = animated ? (1./3.) : 0;
-	NSTimeInterval graceTimeDelay = self.graceTime;
-	
-	[UIView animateWithDuration:length delay:graceTimeDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction animations:^{
-		self.transform = _rotationTransform;
-		self.alpha = 1.0f;
-	} completion:^(BOOL finished) {
-		_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
-	}];
+	dispatch_always_main_queue(^{
+		[self reloadOrientation:nil];
+		self.alpha = 0.0f;
+		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
+		
+		NSTimeInterval length = animated ? (1./3.) : 0;
+		[UIView animateWithDuration:length delay:self.showDelayTime options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction animations:^{
+			self.transform = _rotationTransform;
+			self.alpha = 1.0f;
+		} completion:^(BOOL finished) {
+			_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
+		}];
+	});
 }
 
 - (void)hide:(BOOL)animated {
@@ -220,13 +210,13 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
 	dispatch_after(popTime, dispatch_get_main_queue(), ^{
 		NSTimeInterval length = animated ? (1./3.) : 0;
-		NSTimeInterval minimumShowDelay = 0.0;
+		NSTimeInterval delay = 0.0;
 		if (_showStarted) {
-			minimumShowDelay = self.minShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
+			delay = minimumShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
 			_showStarted = 0.0;
 		}
 		
-		[UIView animateWithDuration:length delay:minimumShowDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
@@ -279,7 +269,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
     CGContextClosePath(context);
     CGContextFillPath(context);
 }
-
 
 - (void)layoutSubviews {
 	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
@@ -448,8 +437,9 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
 		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
 		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[self addSubview:newLabel];
 		detailLabel = newLabel;
+		[self addSubview:newLabel];
+		
 	}
 	return detailLabel;
 }
