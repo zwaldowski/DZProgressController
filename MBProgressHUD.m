@@ -492,29 +492,32 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#import <QuartzCore/QuartzCore.h>
+@implementation MBRoundProgressView
 
-@interface MBRoundProgressLayer : CAShapeLayer
+@synthesize progress;
 
-@property (nonatomic) CGFloat progress;
-
-@end
-
-@implementation MBRoundProgressLayer
-
-@dynamic progress;
-
-+ (BOOL)needsDisplayForKey:(NSString *)key {
-	return [key isEqualToString:@"progress"] || [super needsDisplayForKey:key];
+- (id)init {
+    return [self initWithFrame:CGRectMake(0.0f, 0.0f, 37.0f, 37.0f)];
 }
 
-- (void)drawInContext:(CGContextRef)context {
+- (id)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.backgroundColor = [UIColor clearColor];
+		self.opaque = NO;
+    }
+    return self;
+}
+
+- (void)drawRect:(CGRect)rect {
 	CGRect allRect = self.bounds;
     CGRect circleRect = CGRectInset(allRect, 2.0f, 2.0f);
-
+	
+	CGContextRef context = UIGraphicsGetCurrentContext();
+	
 	// Draw background
-	CGContextSetStrokeColorWithColor(context, self.strokeColor);
-	CGContextSetFillColorWithColor(context, self.fillColor);
+	CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
+	CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 0.1);
     CGContextSetLineWidth(context, 2.0f);
     CGContextFillEllipseInRect(context, circleRect);
     CGContextStrokeEllipseInRect(context, circleRect);
