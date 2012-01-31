@@ -10,6 +10,9 @@
 
 #pragma mark Constants and Functions
 
+const id MBProgressHUDSuccessImageView = @"MBProgressHUDSuccessImageView";
+const id MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
+
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
 static const CGFloat opacity = 0.85f;
@@ -370,8 +373,14 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 }
 
 - (void)setCustomView:(UIView *)newCustomView {
-	if ([newCustomView isEqual:customView])
-		return;
+	if ([newCustomView isKindOfClass:[NSString class]]) {
+		if ([(id)newCustomView isEqualToString:@"MBProgressHUDSuccessImageView"]) {
+			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
+		} else if ([(id)newCustomView isEqualToString:@"MBProgressHUDSuccessImageView"]) {
+			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"error"]];
+		} else
+			return;
+	}
 	
 	customView = newCustomView;
 	

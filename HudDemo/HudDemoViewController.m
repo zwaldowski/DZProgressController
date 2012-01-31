@@ -88,7 +88,7 @@
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
 	
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
+	HUD.customView = MBProgressHUDSuccessImageView;
 	
     // Set custom view mode
     HUD.mode = MBProgressHUDModeCustomView;
@@ -197,7 +197,7 @@
     HUD.mode = MBProgressHUDModeIndeterminate;
     HUD.label.text = @"Cleaning up";
     sleep(2);
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
+	HUD.customView = MBProgressHUDSuccessImageView;
 	HUD.mode = MBProgressHUDModeCustomView;
 	HUD.label.text = @"Completed";
 	sleep(2);
@@ -217,7 +217,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	HUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
+	HUD.customView = MBProgressHUDSuccessImageView;
     HUD.mode = MBProgressHUDModeCustomView;
 	[HUD hide:YES afterDelay:2];
 }

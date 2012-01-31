@@ -7,6 +7,12 @@
 
 #import <UIKit/UIKit.h>
 
+/** When set as the HUD's custom view, the HUD will show a check image. **/
+extern const id MBProgressHUDSuccessImageView;
+
+/** When set as the HUD's custom view, the HUD will show an error image. **/
+extern const id MBProgressHUDErrorImageView;
+
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
     MBProgressHUDModeIndeterminate,
