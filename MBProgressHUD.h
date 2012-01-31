@@ -118,28 +118,6 @@ typedef enum {
  */
 @property (nonatomic, copy) NSString *detailsLabelText;
 
-/** 
- * The opacity of the HUD window. Defaults to 0.9 (90% opacity). 
- */
-@property (nonatomic) CGFloat opacity;
-
-/** 
- * The x-axis offset of the HUD relative to the centre of the superview. 
- */
-@property (nonatomic) CGFloat xOffset;
-
-/** 
- * The y-ayis offset of the HUD relative to the centre of the superview. 
- */
-@property (nonatomic) CGFloat yOffset;
-
-/**
- * The amounth of space between the HUD edge and the HUD elements (labels, indicators or custom views).
- *
- * Defaults to 20.0
- */
-@property (nonatomic) CGFloat margin;
-
 /*
  * Grace period is the time (in seconds) that the invoked method may be run without 
  * showing the HUD. If the task finishes befor the grace time runs out, the HUD will
@@ -150,7 +128,6 @@ typedef enum {
  * @see taskInProgress
  */
 @property (nonatomic) NSTimeInterval graceTime;
-
 
 /**
  * The minimum time (in seconds) that the HUD is shown. 

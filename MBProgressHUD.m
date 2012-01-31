@@ -8,6 +8,7 @@
 
 #import "MBProgressHUD.h"
 
+
 // A progress view for showing definite progress by filling up a circle (pie chart).
 @interface MBRoundProgressView : UIView
 @property (nonatomic) CGFloat progress;
@@ -23,22 +24,27 @@
 - (void)updateDetailsLabelText:(NSString *)newText;
 - (void)updateProgress;
 - (void)updateIndicators;
-- (void)setTransformForCurrentOrientation:(BOOL)animated;
 - (void)deviceOrientationDidChange:(NSNotification *)notification;
 
+@property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) UILabel *label;
 @property (nonatomic, strong) UILabel *detailsLabel;
 
-@property (nonatomic, strong) UIView *indicator;
 @property (nonatomic, strong) NSDate *showStarted;
 
 @end
 
-
 @implementation MBProgressHUD
 
-#pragma mark -
-#pragma mark Accessors
+#pragma mark Constants
+
+static const CGFloat padding = 4.0f;
+static const CGFloat margin = 18.0f;
+static const CGFloat opacity = 0.9f;
+static const CGFloat radius = 10.0f;
+
+
+#pragma mark - Accessors
 
 @synthesize mode;
 
@@ -48,14 +54,9 @@
 @synthesize labelText, detailsLabelText;
 @synthesize labelFont, detailsLabelFont;
 
-@synthesize opacity;
-
 @synthesize indicator;
 
-@synthesize xOffset;
-@synthesize yOffset;
 @synthesize minSize;
-@synthesize margin;
 
 @synthesize graceTime;
 @synthesize minShowTime;
@@ -164,14 +165,6 @@
 }
 
 #pragma mark -
-#pragma mark Constants
-
-#define PADDING 4.0f
-
-#define LABELFONTSIZE 16.0f
-#define LABELDETAILSFONTSIZE 12.0f
-
-#pragma mark -
 #pragma mark Class methods
 
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
@@ -208,29 +201,19 @@
 
 - (id)initWithView:(UIView *)view {
 	// Let's check if the view is nil (this is a common error when using the windw initializer above)
-	if (!view) {
-		[NSException raise:@"MBProgressHUDViewIsNillException" 
-					format:@"The view used in the MBProgressHUD initializer is nil."];
+	NSAssert(view, @"The view used in the MBProgressHUD initializer is nil.");
+	if ((self = [self initWithFrame:view.bounds])) {
+		if ([view isKindOfClass:[UIWindow class]])
+			[self deviceOrientationDidChange:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
 	}
-	id me = [self initWithFrame:view.bounds];
-	// We need to take care of rotation ourselfs if we're adding the HUD to a window
-	if ([view isKindOfClass:[UIWindow class]]) {
-		[self setTransformForCurrentOrientation:NO];
-	}
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) 
-												 name:UIDeviceOrientationDidChangeNotification object:nil];
-	
-	return me;
+	return self;
 }
 
 - (void)removeFromSuperview {
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIDeviceOrientationDidChangeNotification
-                                                  object:nil];
-    
     [super removeFromSuperview];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
 }
-
 
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -239,12 +222,8 @@
         self.mode = MBProgressHUDModeIndeterminate;
         self.labelText = nil;
         self.detailsLabelText = nil;
-        self.opacity = 0.8f;
-        self.labelFont = [UIFont boldSystemFontOfSize:LABELFONTSIZE];
-        self.detailsLabelFont = [UIFont boldSystemFontOfSize:LABELDETAILSFONTSIZE];
-        self.xOffset = 0.0f;
-        self.yOffset = 0.0f;
-		self.margin = 18.0f;
+        self.labelFont = [UIFont boldSystemFontOfSize:16.0f];
+        self.detailsLabelFont = [UIFont boldSystemFontOfSize:12.0f];
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 		
         // Transparent background
@@ -271,8 +250,8 @@
 	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
 	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
 	
-	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2) + self.xOffset;
-    indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2) + self.yOffset;
+	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
+    indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
 	
     // Add label if label text was set
     if (self.labelText) {		
@@ -292,15 +271,15 @@
         // Update HUD size
 		if (newSize.width < dims.width + 2 * margin)
             newSize.width = dims.width + 2 * margin;
-        newSize.height += dims.height + PADDING;
+        newSize.height += dims.height + padding;
 		
         // Set the label position and dimensions
 		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		lFrame.origin.y = CGRectGetMaxY(indFrame) - PADDING;
+		lFrame.origin.y = CGRectGetMaxY(indFrame) - padding;
 		lFrame.size = dims;
 		
         // Move indicator to make room for the label
-        indFrame.origin.y -= floor(dims.height / 2) + PADDING;
+        indFrame.origin.y -= floor(dims.height / 2) + padding;
 		
         [self addSubview:label];
     }
@@ -318,23 +297,23 @@
 		self.detailsLabel.text = self.detailsLabelText;
 		self.detailsLabel.numberOfLines = 0;
 		
-		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2*margin);
+		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
 		CGSize dims = [self.detailsLabelText sizeWithFont:self.detailsLabelFont constrainedToSize:maxSize lineBreakMode:self.detailsLabel.lineBreakMode];
 		
 		// Update HUD size
 		if (newSize.width < dims.width + 2 * margin)
 			newSize.width = dims.width + 2 * margin;
-		newSize.height += dims.height + PADDING;
+		newSize.height += dims.height + padding;
 		
 		// Move indicator to make room for the new label
-		indFrame.origin.y -= (floor(dims.height / 2 + PADDING / 2));
+		indFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
 		
 		// Move first label to make room for the new label
-		lFrame.origin.y -= (floor(dims.height / 2 + PADDING / 2));
+		lFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
 		
 		// Set label position and dimensions
 		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		dFrame.origin.y = CGRectGetMaxY(lFrame) + PADDING * 2;
+		dFrame.origin.y = CGRectGetMaxY(lFrame) + padding * 2;
 		dFrame.size = dims;
 		
 		[self addSubview:self.detailsLabel];
@@ -358,7 +337,8 @@
 #pragma mark -
 #pragma mark Showing and execution
 
-- (void)show:(BOOL)animated {	
+- (void)show:(BOOL)animated {
+	[self deviceOrientationDidChange:nil];
 	self.alpha = 0.0f;
 	self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
 
@@ -428,14 +408,11 @@
     // Draw rounded HUD background rect
 	CGRect boxRect = CGRectZero;
 	boxRect.size = _HUDSize;
-	boxRect.origin.x = roundf((self.bounds.size.width - _HUDSize.width) / 2) + self.xOffset;
-	boxRect.origin.y = roundf((self.bounds.size.height - _HUDSize.height) / 2) + self.yOffset;
-	
-	// Corner radius
-	CGFloat radius = 10.0f;
+	boxRect.origin.x = roundf((self.bounds.size.width - _HUDSize.width) / 2);
+	boxRect.origin.y = roundf((self.bounds.size.height - _HUDSize.height) / 2);
 
     CGContextBeginPath(context);
-    CGContextSetGrayFillColor(context, 0.0f, self.opacity);
+    CGContextSetGrayFillColor(context, 0.0f, opacity);
     CGContextMoveToPoint(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect));
     CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMinY(boxRect) + radius, radius, 3 * M_PI / 2, 0, 0);
     CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMaxY(boxRect) - radius, radius, 0, M_PI / 2, 0);
@@ -453,39 +430,39 @@
 		return;
 	
 	if ([self.superview isKindOfClass:[UIWindow class]]) {
-		[self setTransformForCurrentOrientation:YES];
+		UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+		NSInteger degrees = 0;
+		
+		// Stay in sync with the superview
+		if (self.superview) {
+			self.bounds = self.superview.bounds;
+			[self setNeedsDisplay];
+		}
+		
+		if (UIInterfaceOrientationIsLandscape(orientation)) {
+			if (orientation == UIInterfaceOrientationLandscapeLeft) { degrees = -90; } 
+			else { degrees = 90; }
+			// Window coordinates differ!
+			self.bounds = CGRectMake(0, 0, self.bounds.size.height, self.bounds.size.width);
+		} else {
+			if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
+			else { degrees = 0; }
+		}
+		
+		_rotationTransform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
+		
+		if (!notification) {
+			self.transform = _rotationTransform;
+			return;
+		}
+		
+		[UIView animateWithDuration:(1./3.) animations:^{
+			self.transform = _rotationTransform;
+		}];
 	} else {
 		self.bounds = self.superview.bounds;
 		[self setNeedsDisplay];
 	}
-}
-
-- (void)setTransformForCurrentOrientation:(BOOL)animated {
-	UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-	NSInteger degrees = 0;
-	
-	// Stay in sync with the superview
-	if (self.superview) {
-		self.bounds = self.superview.bounds;
-		[self setNeedsDisplay];
-	}
-	
-	if (UIInterfaceOrientationIsLandscape(orientation)) {
-		if (orientation == UIInterfaceOrientationLandscapeLeft) { degrees = -90; } 
-		else { degrees = 90; }
-		// Window coordinates differ!
-		self.bounds = CGRectMake(0, 0, self.bounds.size.height, self.bounds.size.width);
-	} else {
-		if (orientation == UIInterfaceOrientationPortraitUpsideDown) { degrees = 180; } 
-		else { degrees = 0; }
-	}
-	
-	_rotationTransform = CGAffineTransformMakeRotation(degrees * M_PI / 180.0f);
-	
-	NSTimeInterval animationLength = animated ? (1./3.) : 0;
-	[UIView animateWithDuration:animationLength animations:^{
-		self.transform = _rotationTransform;
-	}];
 }
 
 @end
@@ -527,49 +504,20 @@
     CGFloat radius = floorf((allRect.size.width - 4) / 2);
     CGFloat startAngle = -M_PI / 2; // 90 degrees
     CGFloat endAngle = (self.progress * 2 * M_PI) + startAngle;
-	CGContextSetFillColorWithColor(context, self.strokeColor);
+	CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
     CGContextMoveToPoint(context, center.x, center.y);
     CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
     CGContextClosePath(context);
     CGContextFillPath(context);
-	
-	[super drawInContext:context];
-}
-
-@end
-
-@implementation MBRoundProgressView {
-	MBRoundProgressLayer *sublayer;
-}
-
-@synthesize progress;
-
-- (id)init {
-    return [self initWithFrame:CGRectMake(0.0f, 0.0f, 37.0f, 37.0f)];
-}
-
-- (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.backgroundColor = [UIColor clearColor];
-		self.opaque = NO;
-		sublayer = [MBRoundProgressLayer layer];
-		sublayer.strokeColor = [[UIColor whiteColor] CGColor];
-		sublayer.fillColor = [[UIColor colorWithWhite:1.0 alpha:0.1] CGColor];
-		sublayer.frame = frame;
-		sublayer.lineWidth = 2.0f;
-		sublayer.shouldRasterize = YES;
-		[self.layer addSublayer:sublayer];
-    }
-    return self;
-}
-
-- (CGFloat)progress {
-	return sublayer.progress;
 }
 
 - (void)setProgress:(CGFloat)newProgress {
-	[sublayer setProgress:newProgress];
+	if (progress == newProgress)
+		return;
+	
+	progress = newProgress;
+	
+	[self setNeedsDisplay];
 }
 
 @end
