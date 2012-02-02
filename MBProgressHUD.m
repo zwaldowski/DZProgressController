@@ -31,7 +31,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 @implementation MBProgressHUD {
 	UIStatusBarStyle _statusBarStyle;
-	CGSize _HUDSize;
+	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
 	NSTimeInterval _showStarted;
 	__weak UIView *indicator;
@@ -248,20 +248,14 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 - (void)drawRect:(CGRect)rect {
     CGContextRef context = UIGraphicsGetCurrentContext(); 
-    
-    // Draw rounded HUD background rect
-	CGRect boxRect = CGRectZero;
-	boxRect.size = _HUDSize;
-	boxRect.origin.x = roundf((rect.size.width - _HUDSize.width) / 2);
-	boxRect.origin.y = roundf((rect.size.height - _HUDSize.height) / 2);
 	
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, opacity);
-    CGContextMoveToPoint(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect));
-    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMinY(boxRect) + radius, radius, 3 * M_PI / 2, 0, 0);
-    CGContextAddArc(context, CGRectGetMaxX(boxRect) - radius, CGRectGetMaxY(boxRect) - radius, radius, 0, M_PI / 2, 0);
-    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMaxY(boxRect) - radius, radius, M_PI / 2, M_PI, 0);
-    CGContextAddArc(context, CGRectGetMinX(boxRect) + radius, CGRectGetMinY(boxRect) + radius, radius, M_PI, 3 * M_PI / 2, 0);
+    CGContextMoveToPoint(context, CGRectGetMinX(_HUDRect) + radius, CGRectGetMinY(_HUDRect));
+    CGContextAddArc(context, CGRectGetMaxX(_HUDRect) - radius, CGRectGetMinY(_HUDRect) + radius, radius, 3 * M_PI / 2, 0, 0);
+    CGContextAddArc(context, CGRectGetMaxX(_HUDRect) - radius, CGRectGetMaxY(_HUDRect) - radius, radius, 0, M_PI / 2, 0);
+    CGContextAddArc(context, CGRectGetMinX(_HUDRect) + radius, CGRectGetMaxY(_HUDRect) - radius, radius, M_PI / 2, M_PI, 0);
+    CGContextAddArc(context, CGRectGetMinX(_HUDRect) + radius, CGRectGetMinY(_HUDRect) + radius, radius, M_PI, 3 * M_PI / 2, 0);
     CGContextClosePath(context);
     CGContextFillPath(context);
 }
@@ -270,8 +264,14 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	CGRect frame = self.bounds, lFrame = CGRectZero, indFrame = indicator.bounds;
 	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
 	
-	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
-    indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
+	if (CGRectEqualToRect(frame, self.window.bounds)) {
+		CGFloat statusHeight = CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame]);
+		frame.origin.y += statusHeight;
+		frame.size.height -= statusHeight;
+	}
+	
+	indFrame.origin.x = roundf(CGRectGetMidX(frame) - CGRectGetMidX(indFrame));
+    indFrame.origin.y = roundf(CGRectGetMidY(frame) - CGRectGetMidY(indFrame));
 	
 	CGSize minSize = CGSizeMake(80.0f, 80.0f);
 	
@@ -306,7 +306,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	if (newSize.height < minSize.height)
 		newSize.height = minSize.height;
 	
-	_HUDSize = newSize;
+	_HUDRect = (CGRect){{roundf(CGRectGetMidX(frame) - newSize.width/2), roundf(CGRectGetMidY(frame) - newSize.height/2)}, newSize};
 }
 
 #pragma mark - Accessors
