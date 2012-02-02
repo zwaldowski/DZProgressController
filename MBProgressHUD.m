@@ -15,7 +15,7 @@ const id MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
 
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
-static const CGFloat opacity = 0.85f;
+static const CGFloat opacity = 0.77f;
 static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
@@ -43,7 +43,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark Accessors
 
 @synthesize mode;
-@synthesize minSize;
 @synthesize customView;
 @synthesize wasHiddenBlock;
 @synthesize removeFromSuperViewOnHide;
@@ -280,8 +279,12 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
     indFrame.origin.y = floorf((frame.size.height - indFrame.size.height) / 2);
 	
+	CGSize minSize = CGSizeMake(80.0f, 80.0f);
+	
     // Add label if label text was set
     if (label.text.length) {
+		minSize = CGSizeMake(150.0f, 125.0f);
+		
 		// Compute label dimensions based on font metrics if size is larger than max then clip the label width
 		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
         CGSize dims = [label.text sizeWithFont:label.font constrainedToSize:maxSize lineBreakMode:label.lineBreakMode];

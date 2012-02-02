@@ -147,11 +147,6 @@ typedef enum {
  */
 @property (nonatomic) CGFloat progress;
 
-/**
- * The minimum size of the HUD bezel. Defaults to CGSizeZero.
- */
-@property (nonatomic) CGSize minSize;
-
 /** 
  * Display the HUD.
  *
