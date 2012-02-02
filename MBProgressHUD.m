@@ -414,15 +414,16 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 - (UILabel *)label {
 	if (!label) {
-		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
-		newLabel.font = [UIFont boldSystemFontOfSize:16.0f];
+		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];		
+		newLabel.font = [UIFont boldSystemFontOfSize:24.0f];
 		newLabel.adjustsFontSizeToFitWidth = NO;
         newLabel.textAlignment = UITextAlignmentCenter;
         newLabel.opaque = NO;
-        newLabel.backgroundColor = [UIColor clearColor];
+        newLabel.backgroundColor = nil;
         newLabel.textColor = [UIColor whiteColor];
 		newLabel.numberOfLines = 0;
-		newLabel.lineBreakMode = UILineBreakModeClip;
+		newLabel.lineBreakMode = UILineBreakModeWordWrap;
+		newLabel.contentMode = UIViewContentModeLeft;
 		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kLabelContext];
 		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kLabelContext];
 		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kLabelContext];
