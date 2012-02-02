@@ -35,10 +35,8 @@ typedef enum {
  * - MBProgressHUDModeDeterminate - shows a custom round progress indicator (MBRoundProgressView)
  * - MBProgressHUDModeCustomView - shows an arbitrary, user specified view (@see customView)
  *
- * All three modes can have optional labels assigned:
- * - If the labelText property is set and non-empty then a label containing the provided content is placed below the
- *   indicator view.
- * - If also the detailsLabelText property is set then another label is placed below the first label.
+ * All three modes can have an optional label. If the label has text, then the label containing the provided
+ * content is placed below the indicator view.
  */
 @interface MBProgressHUD : UIView
 
@@ -136,11 +134,6 @@ typedef enum {
  * A view that displays the text for the main label.
  */
 @property (nonatomic, weak, readonly) UILabel *label;
-
-/** 
- * A view that displays the text for the detail label.
- */
-@property (nonatomic, weak, readonly) UILabel *detailLabel;
 
 /** 
  * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 

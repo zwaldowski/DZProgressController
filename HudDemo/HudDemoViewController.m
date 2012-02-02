@@ -51,21 +51,6 @@
 	}];
 }
 
-- (IBAction)showWithDetailsLabel:(id)sender {
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
-    [self.navigationController.view addSubview:HUD];
-	
-	HUD.label.text = @"Loading";
-    HUD.detailLabel.text = @"updating data";
-	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
-		[view removeFromSuperview];
-	};
-	
-	[HUD showWhileExecuting:^{
-		[self myTask];
-	}];
-}
-
 - (IBAction)showWithLabelDeterminate:(id)sender {
     HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
 	[self.navigationController.view addSubview:HUD];
@@ -106,7 +91,6 @@
 	[self.navigationController.view addSubview:HUD];
 	
     HUD.label.text = @"Connecting";
-	HUD.minSize = CGSizeMake(135.f, 135.f);
 	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
 		[view removeFromSuperview];
 	};

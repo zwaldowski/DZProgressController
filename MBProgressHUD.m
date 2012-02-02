@@ -19,7 +19,6 @@ static const CGFloat opacity = 0.77f;
 static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
-static char kDetailLabelContext;
 
 static void dispatch_always_main_queue(dispatch_block_t block) {
 	if ([NSThread isMainThread])
@@ -37,7 +36,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	NSTimeInterval _showStarted;
 	__weak UIView *indicator;
 	__weak UILabel *label;
-	__weak UILabel *detailLabel;
 }
 
 #pragma mark Accessors
@@ -77,7 +75,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark - Internal notifications
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if (context == &kLabelContext || context == &kDetailLabelContext) {
+	if (context == &kLabelContext) {
 		if (self.superview) {
 			dispatch_always_main_queue(^{
 				[self setNeedsLayout];
@@ -170,10 +168,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	[label removeObserver:self forKeyPath:@"font"];
 	[label removeObserver:self forKeyPath:@"textColor"];
 	[label removeObserver:self forKeyPath:@"textAlignment"];
-	[detailLabel removeObserver:self forKeyPath:@"text"];
-	[detailLabel removeObserver:self forKeyPath:@"font"];
-	[detailLabel removeObserver:self forKeyPath:@"textColor"];
-	[detailLabel removeObserver:self forKeyPath:@"textAlignment"];
 }
 
 #pragma mark - Lifecycle methods
@@ -273,7 +267,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 }
 
 - (void)layoutSubviews {
-	CGRect frame = self.bounds, lFrame = CGRectZero, dFrame = CGRectZero, indFrame = indicator.bounds;
+	CGRect frame = self.bounds, lFrame = CGRectZero, indFrame = indicator.bounds;
 	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
 	
 	indFrame.origin.x = floorf((frame.size.width - indFrame.size.width) / 2);
@@ -303,30 +297,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
         indFrame.origin.y -= floor(dims.height / 2) + padding;
     }
 	
-	// Add details label delatils text was set
-	if (detailLabel.text.length) {
-		CGSize maxSize = CGSizeMake(frame.size.width - 4 * margin, frame.size.height - newSize.height - 2 * margin);
-		CGSize dims = [detailLabel.text sizeWithFont:detailLabel.font constrainedToSize:maxSize lineBreakMode:detailLabel.lineBreakMode];
-		
-		// Update HUD size
-		if (newSize.width < dims.width + 2 * margin)
-			newSize.width = dims.width + 2 * margin;
-		newSize.height += dims.height + padding;
-		
-		// Move indicator to make room for the new label
-		indFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
-		
-		// Move first label to make room for the new label
-		lFrame.origin.y -= (floor(dims.height / 2 + padding / 2));
-		
-		// Set label position and dimensions
-		dFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		dFrame.origin.y = CGRectGetMaxY(lFrame) + padding * 2;
-		dFrame.size = dims;
-	}
-	
 	label.frame = lFrame;
-	detailLabel.frame = dFrame;
 	indicator.frame = indFrame;
 	
 	if (newSize.width < minSize.width)
@@ -435,28 +406,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		label = newLabel;
 	}
 	return label;
-}
-
-- (UILabel *)detailLabel {
-	if (!detailLabel) {
-		UILabel *newLabel = [[UILabel alloc] initWithFrame:self.bounds];
-        newLabel.font = [UIFont boldSystemFontOfSize:12.0f];
-		newLabel.adjustsFontSizeToFitWidth = NO;
-		newLabel.textAlignment = UITextAlignmentCenter;
-		newLabel.opaque = NO;
-        newLabel.backgroundColor = [UIColor clearColor];
-		newLabel.textColor = [UIColor whiteColor];
-		newLabel.numberOfLines = 0;
-		newLabel.lineBreakMode = UILineBreakModeClip;
-		[newLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"font" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textColor" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		[newLabel addObserver:self forKeyPath:@"textAlignment" options:NSKeyValueObservingOptionNew context:&kDetailLabelContext];
-		detailLabel = newLabel;
-		[self addSubview:newLabel];
-		
-	}
-	return detailLabel;
 }
 
 @end
