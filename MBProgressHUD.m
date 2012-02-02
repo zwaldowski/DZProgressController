@@ -42,7 +42,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 @synthesize mode;
 @synthesize customView;
-@synthesize wasHiddenBlock;
+@synthesize wasTappedBlock, wasHiddenBlock;
 @synthesize removeFromSuperViewOnHide;
 @synthesize showDelayTime, minimumShowTime;
 
@@ -128,6 +128,17 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	}
 }
 
+- (void)tapGestureRecognizerFired:(UITapGestureRecognizer *)recognizer {
+	if (recognizer.state != UIGestureRecognizerStateRecognized)
+		return;
+	
+	if (!CGRectContainsPoint(_HUDRect, [recognizer locationInView:self]))
+		return;
+	
+	if (wasTappedBlock)
+		wasTappedBlock(self);
+}
+
 #pragma mark - Setup and teardown
 
 - (id)initWithWindow:(UIWindow *)window {
@@ -159,6 +170,9 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
         self.alpha = 0.0f;
 		
 		_rotationTransform = CGAffineTransformIdentity;
+		
+		UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognizerFired:)];
+		[self addGestureRecognizer:recognizer];
     }
     return self;
 }
@@ -212,7 +226,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 			_showStarted = 0.0;
 		}
 		
-		[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
@@ -248,7 +262,6 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 - (void)drawRect:(CGRect)rect {
     CGContextRef context = UIGraphicsGetCurrentContext(); 
-	
     CGContextBeginPath(context);
     CGContextSetGrayFillColor(context, 0.0f, opacity);
     CGContextMoveToPoint(context, CGRectGetMinX(_HUDRect) + radius, CGRectGetMinY(_HUDRect));

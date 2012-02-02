@@ -97,9 +97,14 @@ typedef enum {
 @property (nonatomic) MBProgressHUDMode mode;
 
 /**
+ * A callback fired when the HUD is tapped.
+ */
+@property (nonatomic, copy) void(^wasTappedBlock)(MBProgressHUD *);
+
+/**
  * A callback fired when the HUD is hidden.
  */
-@property (nonatomic, weak) void(^wasHiddenBlock)(MBProgressHUD *);
+@property (nonatomic, copy) void(^wasHiddenBlock)(MBProgressHUD *);
 
 /*
  * The show delay is the time (in seconds) that your method may run without the HUD
