@@ -286,15 +286,15 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
         // Update HUD size
 		if (newSize.width < dims.width + 2 * margin)
             newSize.width = dims.width + 2 * margin;
-        newSize.height += dims.height + padding;
-		
-        // Set the label position and dimensions
-		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
-		lFrame.origin.y = CGRectGetMaxY(indFrame) - padding;
-		lFrame.size = dims;
+        newSize.height += dims.height + margin;
 		
         // Move indicator to make room for the label
         indFrame.origin.y -= floor(dims.height / 2) + padding;
+		
+        // Set the label position and dimensions
+		lFrame.origin.x = floor((frame.size.width - dims.width) / 2);
+		lFrame.origin.y = CGRectGetMaxY(indFrame) + 2 * padding;
+		lFrame.size = dims;
     }
 	
 	label.frame = lFrame;
