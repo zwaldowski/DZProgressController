@@ -34,8 +34,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
 	NSTimeInterval _showStarted;
-	__weak UIView *indicator;
-	__weak UILabel *label;
+	__unsafe_unretained UIView *indicator;
 }
 
 #pragma mark Accessors
@@ -45,6 +44,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 @synthesize wasTappedBlock, wasHiddenBlock;
 @synthesize removeFromSuperViewOnHide;
 @synthesize showDelayTime, minimumShowTime;
+@synthesize label;
 
 #pragma mark - Class methods
 

@@ -138,7 +138,7 @@ typedef enum {
 /** 
  * A view that displays the text for the main label.
  */
-@property (nonatomic, weak, readonly) UILabel *label;
+@property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
 /** 
  * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 
