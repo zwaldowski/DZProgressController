@@ -25,27 +25,29 @@ typedef enum {
 /** 
  * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
  *
- * This is a simple drop-in class for displaying a progress HUD view similar to Apples private UIProgressHUD class.
- * The MBProgressHUD window spans over the entire space given to it by its superview and catches all user
- * interaction on this region, thereby preventing the user operations on components below the view. The HUD itself
- * is drawn centered as a rounded semi-transparent view which resizes depending on the user specified content.
+ * This is a simple drop-in class for displaying a progress HUD view similar to the
+ * private UIProgressHUD. The HUD view spans over the entire space given to it by
+ * its superview and catches all touchs on that region, thereby preventing user
+ * interaction on components below the view. The HUD itself is drawn centered as
+ * a rounded semi-transparent box that resizes depending on its content.
  *
- * This view supports three modes of operation:
+ * The HUD supports three modes of operation:
  * - MBProgressHUDModeIndeterminate - shows a UIActivityIndicatorView
- * - MBProgressHUDModeDeterminate - shows a custom round progress indicator (MBRoundProgressView)
- * - MBProgressHUDModeCustomView - shows an arbitrary, user specified view (@see customView)
+ * - MBProgressHUDModeDeterminate - shows a custom round progress indicator
+ * - MBProgressHUDModeCustomView - shows an arbitrary, user specified view
  *
- * All three modes can have an optional label. If the label has text, then the label containing the provided
- * content is placed below the indicator view.
+ * All three modes have an optional label. If the label has text, then the label
+ * is placed below the indicator view.
+ *
+ * @see customView
  */
 @interface MBProgressHUD : UIView
 
 /**
- * Creates a new HUD, adds it to provided view and shows it. The counterpart to this method is hideHUDForView:animated:.
+ * Creates a new HUD, adds it to provided view and shows it.
  * 
  * @param view The view that the HUD will be added to
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
+ * @param animated If set to YES, the HUD will disappear with an animated transition.
  * @return A reference to the created HUD.
  *
  * @see hideHUDForView:animated:
@@ -53,20 +55,19 @@ typedef enum {
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated;
 
 /**
- * Finds a HUD subview and hides it. The counterpart to this method is showHUDAddedTo:animated:.
+ * Finds a HUD subview and hides it.
  *
  * @param view The view that is going to be searched for a HUD subview.
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
+ * @param animated If set to YES, the HUD will disappear with an animated transition.
  * @return YES if a HUD was found and removed, NO otherwise. 
  *
- * @see hideHUDForView:animated:
+ * @see showHUDAddedTo:animated:
  */
 + (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated;
 
 /**
- * The UIView (i.g., a UIImageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
- * For best results use a 37 by 37 pixel view (so the bounds match the build in indicator bounds). 
+ * The view to be shown when the HUD is set to MBProgressHUDModeCustomView.
+ * For best results, use a 37x37 view (so the bounds match the default indicator bounds). 
  *
  * Pass `MBProgressHUDSuccessImageView` for an image view with a check.
  * Pass `MBProgressHUDErrorImageView`, for an image view with an error symbol.
@@ -74,8 +75,7 @@ typedef enum {
 @property (nonatomic, strong) UIView *customView;
 
 /** 
- * MBProgressHUD operation mode. Switches between indeterminate (MBProgressHUDModeIndeterminate) and determinate
- * progress (MBProgressHUDModeDeterminate). The default is MBProgressHUDModeIndeterminate.
+ * MBProgressHUD operation mode. The default is MBProgressHUDModeIndeterminate.
  *
  * @see MBProgressHUDMode
  */
@@ -133,22 +133,21 @@ typedef enum {
 /** 
  * Display the HUD.
  *
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
+ * @param animated If set to YES, the HUD will disappear with an animated transition.
+ * If set to NO the HUD will not use animations while disappearing.
  */
 - (void)show:(BOOL)animated;
 
 /** 
- * Hide the HUD. This still calls the was hidden block. Use it to hide the HUD when your task completes.
+ * Hide the HUD. Use it to hide the HUD when your task completes.
  *
- * @param animated If set to YES the HUD will disappear using the current animationType. If set to NO the HUD will not use
- * animations while disappearing.
- * @see hide:afterDelay:
+ * @param animated If set to YES, the HUD will disappear with an animated transition.
+ * @see hide:completion:
  */
 - (void)hide:(BOOL)animated;
 
 /** 
- * Hide the HUD after a delay. This still calls the was hidden block. Use it to hide the HUD when your task completes.
+ * Hide the HUD with a completion callback. Use it to hide the HUD when your task completes.
  *
  * @param animated If set to YES, the HUD will disappear using the current animation type.
  * @param completion A block to be called once the HUD has disappeared.
@@ -158,14 +157,14 @@ typedef enum {
 - (void)hide:(BOOL)animated completion:(dispatch_block_t)completion;
 
 /** 
- * Shows the HUD while a background task is executing in a background queue, then hides the HUD.
+ * Shows the HUD while a task is executing in a background queue, then hides it.
  *
- * This method also takes care of autorelease pools so your method does not have to be concerned with setting up a
- * pool.
+ * This method also takes care of an autorelease pools so your method does not have
+ * to be concerned with setting one up.
  *
  * The HUD will appear and disappear using the current animationType.
  *
- * @param block A code block to be executed while the HUD is shown. This block will be executed in a global background queue.
+ * @param block A code block to be executed while the HUD is shown.
  */
 - (void)showWhileExecuting:(dispatch_block_t)block;
 
@@ -182,10 +181,7 @@ typedef enum {
 
 #pragma mark -
 
-/**
- * A progress view for showing definite progress by filling up a circle (pie chart).
- */
-
+/** A progress view for showing definite progress by filling up a circle (pie chart). */
 @interface MBRoundProgressView : UIView
 
 @property (nonatomic) CGFloat progress;
