@@ -371,7 +371,7 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
 	}
 	
 	dispatch_async_if_lock(animationSemaphore, ^{
-		if (oldMode == MBProgressHUDModeIndeterminate && indicator)
+		if (oldMode == MBProgressHUDModeIndeterminate && [indicator isKindOfClass:[UIActivityIndicatorView class]])
 			[(UIActivityIndicatorView *)indicator stopAnimating];
 		[indicator removeFromSuperview];
 		indicator = newIndicator;
