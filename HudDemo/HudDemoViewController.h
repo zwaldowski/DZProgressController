@@ -20,11 +20,13 @@
 - (IBAction)showSimple:(id)sender;
 - (IBAction)showWithLabel:(id)sender;
 - (IBAction)showWithLabelDeterminate:(id)sender;
-- (IBAction)showWithCustomView:(id)sender;
 - (IBAction)showWithLabelMixed:(id)sender;
 - (IBAction)showUsingBlocks:(id)sender;
 - (IBAction)showOnWindow:(id)sender;
 - (IBAction)showURL:(id)sender;
+- (IBAction)showWithSuccess:(id)sender;
+- (IBAction)showWithError:(id)sender;
+
 
 - (void)myTask;
 - (void)myProgressTask;

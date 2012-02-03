@@ -67,20 +67,6 @@
 	}];
 }
 
-- (IBAction)showWithCustomView:(id)sender {
-    MBProgressHUD *inlineHUD = [MBProgressHUD new];
-	[self.navigationController.view addSubview:inlineHUD];
-	
-	inlineHUD.customView = MBProgressHUDSuccessImageView;
-    inlineHUD.mode = MBProgressHUDModeCustomView;
-    inlineHUD.label.text = @"Completed";
-	inlineHUD.removeFromSuperViewOnHide = YES;
-	inlineHUD.minimumShowTime = 2.0f;
-	
-    [inlineHUD show:YES];
-	[inlineHUD hide:YES];
-}
-
 - (IBAction)showWithLabelMixed:(id)sender {
     HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
@@ -129,17 +115,32 @@
 	HUD.minimumShowTime = 2.0;
 }
 
-- (IBAction)showWithGradient:(id)sender {
-    HUD = [MBProgressHUD new];
-	[self.navigationController.view addSubview:HUD];
+- (IBAction)showWithSuccess:(id)sender {
+	MBProgressHUD *inlineHUD = [MBProgressHUD new];
+	[self.navigationController.view addSubview:inlineHUD];
 	
-	// Regiser for HUD callbacks so we can remove it from the window at the right time
-	HUD.removeFromSuperViewOnHide = YES;
+	inlineHUD.customView = MBProgressHUDSuccessImageView;
+    inlineHUD.mode = MBProgressHUDModeCustomView;
+    inlineHUD.label.text = @"Completed";
+	inlineHUD.removeFromSuperViewOnHide = YES;
+	inlineHUD.minimumShowTime = 2.0f;
 	
-    // Show the HUD while the provided block executes in the background
-	[HUD showWhileExecuting:^{
-		[self myTask];
-	}];
+    [inlineHUD show:YES];
+	[inlineHUD hide:YES];
+}
+
+- (IBAction)showWithError:(id)sender {
+	MBProgressHUD *inlineHUD = [MBProgressHUD new];
+	[self.navigationController.view addSubview:inlineHUD];
+	
+	inlineHUD.customView = MBProgressHUDErrorImageView;
+    inlineHUD.mode = MBProgressHUDModeCustomView;
+    inlineHUD.label.text = @"Failed";
+	inlineHUD.removeFromSuperViewOnHide = YES;
+	inlineHUD.minimumShowTime = 2.0f;
+	
+    [inlineHUD show:YES];
+	[inlineHUD hide:YES];
 }
 
 #pragma mark -
