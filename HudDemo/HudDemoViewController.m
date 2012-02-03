@@ -68,20 +68,17 @@
 }
 
 - (IBAction)showWithCustomView:(id)sender {
-    HUD = [MBProgressHUD new];
-	[self.navigationController.view addSubview:HUD];
+    MBProgressHUD *inlineHUD = [MBProgressHUD new];
+	[self.navigationController.view addSubview:inlineHUD];
 	
-	HUD.customView = MBProgressHUDSuccessImageView;
+	inlineHUD.customView = MBProgressHUDSuccessImageView;
+    inlineHUD.mode = MBProgressHUDModeCustomView;
+    inlineHUD.label.text = @"Completed";
+	inlineHUD.removeFromSuperViewOnHide = YES;
+	inlineHUD.minimumShowTime = 2.0f;
 	
-    // Set custom view mode
-    HUD.mode = MBProgressHUDModeCustomView;
-    HUD.label.text = @"Completed";
-	HUD.wasHiddenBlock = ^(MBProgressHUD *view) {
-		[view removeFromSuperview];
-	};
-	
-    [HUD show:YES];
-	[HUD hide:YES afterDelay:3];
+    [inlineHUD show:YES];
+	[inlineHUD hide:YES];
 }
 
 - (IBAction)showWithLabelMixed:(id)sender {

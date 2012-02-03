@@ -27,18 +27,21 @@ static void dispatch_always_main(dispatch_block_t block) {
 		dispatch_async(dispatch_get_main_queue(), block);
 }
 
-static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInterval fireDelay, void(^block)(dispatch_semaphore_t semaphore)) {
+static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, void(^block)(dispatch_semaphore_t semaphore)) {
 	NSCParameterAssert(block);
-	dispatch_block_t blockDispatch = ^{
-		block(semaphore);
-	};
-	dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-	if (fireDelay <= 0.0)
-		dispatch_always_main(blockDispatch);
-	else {
-		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, fireDelay * NSEC_PER_SEC);
-		dispatch_after(popTime, dispatch_get_main_queue(), blockDispatch);
-	}
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+		dispatch_always_main(^{
+			block(semaphore);
+		});
+	});
+}
+
+static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTimeInterval after) {
+	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, after * NSEC_PER_SEC);
+	dispatch_after(popTime, dispatch_get_current_queue(), ^{
+		dispatch_semaphore_signal(semaphore);
+	});
 }
 
 #pragma mark -
@@ -47,7 +50,6 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 	UIStatusBarStyle _statusBarStyle;
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
-	NSTimeInterval _showStarted;
 	__unsafe_unretained UIView *indicator;
 	dispatch_semaphore_t animationSemaphore;
 }
@@ -185,7 +187,8 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 }
 
 - (void)dealloc {
-	dispatch_release(animationSemaphore);
+	if (animationSemaphore)
+		dispatch_release(animationSemaphore);
 	[label removeObserver:self forKeyPath:@"text"];
 	[label removeObserver:self forKeyPath:@"font"];
 	[label removeObserver:self forKeyPath:@"textColor"];
@@ -209,7 +212,7 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	dispatch_always_main(^{
+	dispatch_always_main_lock(animationSemaphore, ^(dispatch_semaphore_t semaphore) {
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
@@ -219,33 +222,30 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 			self.transform = _rotationTransform;
 			self.alpha = 1.0f;
 		} completion:^(BOOL finished) {
-			_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
+			dispatch_semaphore_signal_after(semaphore, self.minimumShowTime);
 		}];
 	});
 }
 
 - (void)hide:(BOOL)animated {
-	[self hide:animated afterDelay:0.0];
+	[self hide:animated completion:NULL];
 }
 
-- (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
-	dispatch_always_main_lock(animationSemaphore, delay, ^(dispatch_semaphore_t semaphore) {
+- (void)hide:(BOOL)animated completion:(dispatch_block_t)completion {
+	dispatch_always_main_lock(animationSemaphore, ^(dispatch_semaphore_t semaphore) {
 		if (!self.superview || self.alpha < 1.0)
 			return;
 		
 		NSTimeInterval animationLength = animated ? (1./3.) : 0;
-		NSTimeInterval animationDelay = 0.0;
-		if (_showStarted) {
-			animationDelay = minimumShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
-			_showStarted = 0.0;
-		}
-		
-		[UIView animateWithDuration:animationLength delay:animationDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[UIView animateWithDuration:animationLength delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
 			if (wasHiddenBlock)
 				wasHiddenBlock(self);
+			
+			if (completion)
+				completion();
 			
 			if (removeFromSuperViewOnHide)
 				[self removeFromSuperview];
@@ -354,8 +354,6 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 		[view startAnimating];
 		newIndicator = view;
 	}
-	
-	_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
 	
 	dispatch_always_main(^{
 		if (indicator)

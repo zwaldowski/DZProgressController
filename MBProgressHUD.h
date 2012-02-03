@@ -151,11 +151,11 @@ typedef enum {
  * Hide the HUD after a delay. This still calls the was hidden block. Use it to hide the HUD when your task completes.
  *
  * @param animated If set to YES, the HUD will disappear using the current animation type.
- * @param delay Delay in secons until the HUD is hidden.
+ * @param completion A block to be called once the HUD has disappeared.
  * @see hide:
  * @see wasHiddenBlock
  */
-- (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay;
+- (void)hide:(BOOL)animated completion:(dispatch_block_t)completion;
 
 /** 
  * Shows the HUD while a background task is executing in a background queue, then hides the HUD.
