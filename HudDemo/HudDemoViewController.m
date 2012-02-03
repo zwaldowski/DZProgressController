@@ -164,8 +164,12 @@
     // Indeterminate mode
     sleep(2);
     // Switch to determinate mode
-    HUD.mode = MBProgressHUDModeDeterminate;
-    HUD.label.text = @"Progress";
+	
+	[HUD performChanges:^{
+		HUD.mode = MBProgressHUDModeDeterminate;
+		HUD.label.text = @"Progress";
+	}];
+	
     CGFloat progress = 0.0f;
     while (progress < 1.0f)
     {
@@ -174,12 +178,19 @@
         usleep(50000);
     }
     // Back to indeterminate mode
-    HUD.mode = MBProgressHUDModeIndeterminate;
-    HUD.label.text = @"Cleaning up";
+	[HUD performChanges:^{
+		HUD.mode = MBProgressHUDModeIndeterminate;
+		HUD.label.text = @"Cleaning up";
+	}];
+	
     sleep(2);
-	HUD.customView = MBProgressHUDSuccessImageView;
-	HUD.mode = MBProgressHUDModeCustomView;
-	HUD.label.text = @"Completed";
+	
+	[HUD performChanges:^{
+		HUD.customView = MBProgressHUDSuccessImageView;
+		HUD.mode = MBProgressHUDModeCustomView;
+		HUD.label.text = @"Completed";
+	}];
+	
 	sleep(2);
 }
 

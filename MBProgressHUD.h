@@ -169,6 +169,15 @@ typedef enum {
  */
 - (void)showWhileExecuting:(dispatch_block_t)block;
 
+/**
+ * Coalesces changes to the HUD (mode, view, text, fonts) into a single animation.
+ *
+ * This method is non-blocking. The HUD cannot be hidden while animations are ongoing.
+ *
+ * @param A code block of changes to the HUD. Will be executed from within a transition method.
+ */
+- (void)performChanges:(dispatch_block_t)animations;
+
 @end
 
 #pragma mark -

@@ -20,28 +20,34 @@ static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
 
-static void dispatch_always_main(dispatch_block_t block) {
-	if ([NSThread isMainThread])
-		block();
-	else
-		dispatch_async(dispatch_get_main_queue(), block);
-}
-
-static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, void(^block)(dispatch_semaphore_t semaphore)) {
-	NSCParameterAssert(block);
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-		dispatch_always_main(^{
-			block(semaphore);
-		});
-	});
-}
-
 static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTimeInterval after) {
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, after * NSEC_PER_SEC);
 	dispatch_after(popTime, dispatch_get_current_queue(), ^{
 		dispatch_semaphore_signal(semaphore);
 	});
+}
+
+static void dispatch_async_lock(dispatch_queue_t queue, dispatch_semaphore_t semaphore, void(^block)(dispatch_semaphore_t semaphore)) {
+	NSCParameterAssert(block);
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+		dispatch_async(queue, ^{
+			block(semaphore);
+		});
+	});
+}
+
+// Try to acquire the lock. If we can't get it, we're animating so just go ahead and do it.
+static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_block_t block) {
+	NSCParameterAssert(block);
+	if (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW) == 0) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			block();
+			dispatch_semaphore_signal(semaphore);
+		});
+	} else {
+		block();
+	}
 }
 
 #pragma mark -
@@ -94,7 +100,7 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if (context == &kLabelContext) {
 		if (self.superview) {
-			dispatch_always_main(^{
+			dispatch_async_if_lock(animationSemaphore, ^{
 				[self setNeedsLayout];
 				[object setNeedsDisplay];
 			});
@@ -163,7 +169,9 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 }
 
 - (id)init {
-	if ((self = [super initWithFrame:CGRectZero])) {
+	if ((self = [super initWithFrame:CGRectZero])) {		
+		animationSemaphore = dispatch_semaphore_create(1);
+
         // Set default values for properties
         self.mode = MBProgressHUDModeIndeterminate;
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -180,8 +188,6 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 		[self addGestureRecognizer:recognizer];
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
-		
-		animationSemaphore = dispatch_semaphore_create(1);
     }
     return self;
 }
@@ -212,7 +218,7 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	dispatch_always_main_lock(animationSemaphore, ^(dispatch_semaphore_t semaphore) {
+	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
@@ -232,7 +238,7 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 }
 
 - (void)hide:(BOOL)animated completion:(dispatch_block_t)completion {
-	dispatch_always_main_lock(animationSemaphore, ^(dispatch_semaphore_t semaphore) {
+	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
 		if (!self.superview || self.alpha < 1.0)
 			return;
 		
@@ -266,6 +272,15 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 		}
 		
 		[self hide:YES];
+	});
+}
+
+- (void)performChanges:(dispatch_block_t)animations {
+	NSCParameterAssert(animations);
+	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
+		[UIView transitionWithView:self duration:(1./3.) options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionLayoutSubviews animations:animations completion:^(BOOL finished) {
+			dispatch_semaphore_signal_after(semaphore, self.minimumShowTime);
+		}];
 	});
 }
 
@@ -336,37 +351,36 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 #pragma mark - Accessors
 
 - (void)setMode:(MBProgressHUDMode)newMode {
-    // Dont change mode if it wasn't actually changed to prevent flickering
+    // Don't change mode if it wasn't actually changed to prevent flickering
     if (mode && (mode == newMode)) {
         return;
     }
 	
+	MBProgressHUDMode oldMode = mode;
     mode = newMode;
 	
 	UIView *newIndicator = nil;
 	
 	if (mode == MBProgressHUDModeDeterminate) {
 		newIndicator = [MBRoundProgressView new];
+	} else if (mode == MBProgressHUDModeIndeterminate) {
+		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+		newIndicator = view;
 	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
 		newIndicator = self.customView;
-	} else {
-		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-		[view startAnimating];
-		newIndicator = view;
 	}
 	
-	dispatch_always_main(^{
-		if (indicator)
-			[indicator removeFromSuperview];
-		
-		[self addSubview:newIndicator];
-		
-		if (mode == MBProgressHUDModeIndeterminate)
-			[(id)newIndicator startAnimating];
-		
+	dispatch_async_if_lock(animationSemaphore, ^{
+		if (oldMode == MBProgressHUDModeIndeterminate && indicator)
+			[(UIActivityIndicatorView *)indicator stopAnimating];
+		[indicator removeFromSuperview];
 		indicator = newIndicator;
-		
-		[self setNeedsLayout];
+		if (newIndicator) {
+			[self addSubview:newIndicator];
+			[self setNeedsLayout];
+			if (mode == MBProgressHUDModeIndeterminate)
+				[(UIActivityIndicatorView *)newIndicator startAnimating];
+		}
 	});
 }
 
@@ -382,7 +396,7 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
 	
 	customView = newCustomView;
 	
-	if (mode != MBProgressHUDModeCustomView)
+	if (mode == MBProgressHUDModeCustomView)
 		return;
 	
 	mode = MBProgressHUDModeIndeterminate;
@@ -400,7 +414,7 @@ static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTi
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_always_main(^{
+	dispatch_async_if_lock(animationSemaphore, ^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
