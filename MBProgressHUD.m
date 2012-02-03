@@ -22,7 +22,7 @@ static char kLabelContext;
 
 static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTimeInterval after) {
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, after * NSEC_PER_SEC);
-	dispatch_after(popTime, dispatch_get_current_queue(), ^{
+	dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_signal(semaphore);
 	});
 }
@@ -31,20 +31,28 @@ static void dispatch_async_lock(dispatch_queue_t queue, dispatch_semaphore_t sem
 	NSCParameterAssert(block);
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-		dispatch_async(queue, ^{
+		if (dispatch_get_current_queue() == queue) {
 			block(semaphore);
-		});
+		} else {
+			dispatch_async(queue, ^{
+				block(semaphore);
+			});
+		}
 	});
 }
 
 // Try to acquire the lock. If we can't get it, we're animating so just go ahead and do it.
-static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_block_t block) {
+static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t semaphore, dispatch_block_t block) {
 	NSCParameterAssert(block);
 	if (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW) == 0) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			block();
-			dispatch_semaphore_signal(semaphore);
-		});
+		if (dispatch_get_current_queue() == queue) {
+			block();dispatch_semaphore_signal(semaphore);
+		} else {
+			dispatch_async(queue, ^{
+				block();
+				dispatch_semaphore_signal(semaphore);
+			});
+		}
 	} else {
 		block();
 	}
@@ -100,7 +108,7 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if (context == &kLabelContext) {
 		if (self.superview) {
-			dispatch_async_if_lock(animationSemaphore, ^{
+			dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
 				[self setNeedsLayout];
 				[object setNeedsDisplay];
 			});
@@ -356,7 +364,6 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
         return;
     }
 	
-	MBProgressHUDMode oldMode = mode;
     mode = newMode;
 	
 	UIView *newIndicator = nil;
@@ -370,25 +377,23 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
 		newIndicator = self.customView;
 	}
 	
-	dispatch_async_if_lock(animationSemaphore, ^{
-		if (oldMode == MBProgressHUDModeIndeterminate && [indicator isKindOfClass:[UIActivityIndicatorView class]])
-			[(UIActivityIndicatorView *)indicator stopAnimating];
+	dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
 		[indicator removeFromSuperview];
 		indicator = newIndicator;
-		if (newIndicator) {
-			[self addSubview:newIndicator];
-			[self setNeedsLayout];
-			if (mode == MBProgressHUDModeIndeterminate)
-				[(UIActivityIndicatorView *)newIndicator startAnimating];
-		}
+		if (!newIndicator)
+			return;
+		[self addSubview:newIndicator];
+		[self setNeedsLayout];
+		if (mode == MBProgressHUDModeIndeterminate)
+			[(UIActivityIndicatorView *)newIndicator startAnimating];
 	});
 }
 
 - (void)setCustomView:(UIView *)newCustomView {
 	if ([newCustomView isKindOfClass:[NSString class]]) {
-		if ([(id)newCustomView isEqualToString:@"MBProgressHUDSuccessImageView"]) {
+		if ([(id)newCustomView isEqualToString:MBProgressHUDSuccessImageView]) {
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
-		} else if ([(id)newCustomView isEqualToString:@"MBProgressHUDSuccessImageView"]) {
+		} else if ([(id)newCustomView isEqualToString:MBProgressHUDErrorImageView]) {
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"error"]];
 		} else
 			return;
@@ -396,11 +401,10 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
 	
 	customView = newCustomView;
 	
-	if (mode == MBProgressHUDModeCustomView)
-		return;
-	
-	mode = MBProgressHUDModeIndeterminate;
-	self.mode = MBProgressHUDModeCustomView;
+	if (mode == MBProgressHUDModeCustomView) {
+		mode = MBProgressHUDModeIndeterminate;
+		self.mode = MBProgressHUDModeCustomView;
+	}
 }
 
 - (CGFloat)progress {
@@ -414,7 +418,7 @@ static void dispatch_async_if_lock(dispatch_semaphore_t semaphore, dispatch_bloc
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_async_if_lock(animationSemaphore, ^{
+	dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
