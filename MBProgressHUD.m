@@ -25,8 +25,6 @@ static void dispatch_always_main(dispatch_block_t block) {
 		block();
 	else
 		dispatch_async(dispatch_get_main_queue(), block);
-	
-	
 }
 
 static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInterval fireDelay, void(^block)(dispatch_semaphore_t semaphore)) {
@@ -258,21 +256,16 @@ static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInte
 }
 
 - (void)showWhileExecuting:(dispatch_block_t)block {
-	if (!block) return;
-	
-	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	dispatch_async(bgQueue, ^{
-		dispatch_sync(dispatch_get_main_queue(), ^{
-			[self show:YES];
-		});
+	NSCParameterAssert(block);
+
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		[self show:YES];
 		
 		@autoreleasepool {
 			block();
 		}
 		
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self hide:YES];
-		});
+		[self hide:YES];
 	});
 }
 
