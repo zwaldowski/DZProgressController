@@ -20,6 +20,14 @@ static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
 
+static void dispatch_async_always(dispatch_queue_t queue, dispatch_block_t block) {
+	if (dispatch_get_current_queue() == queue) {
+		block();
+	} else {
+		dispatch_async(queue, block);
+	}
+}
+
 static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTimeInterval after) {
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, after * NSEC_PER_SEC);
 	dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
@@ -31,13 +39,9 @@ static void dispatch_async_lock(dispatch_queue_t queue, dispatch_semaphore_t sem
 	NSCParameterAssert(block);
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-		if (dispatch_get_current_queue() == queue) {
+		dispatch_async_always(queue, ^{
 			block(semaphore);
-		} else {
-			dispatch_async(queue, ^{
-				block(semaphore);
-			});
-		}
+		});
 	});
 }
 
@@ -45,14 +49,10 @@ static void dispatch_async_lock(dispatch_queue_t queue, dispatch_semaphore_t sem
 static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t semaphore, dispatch_block_t block) {
 	NSCParameterAssert(block);
 	if (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW) == 0) {
-		if (dispatch_get_current_queue() == queue) {
-			block();dispatch_semaphore_signal(semaphore);
-		} else {
-			dispatch_async(queue, ^{
-				block();
-				dispatch_semaphore_signal(semaphore);
-			});
-		}
+		dispatch_async_always(queue, ^{
+			block();
+			dispatch_semaphore_signal(semaphore);
+		});
 	} else {
 		block();
 	}
@@ -418,11 +418,10 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
+	dispatch_async_always(dispatch_get_main_queue(), ^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
-		[indicator setNeedsDisplay];
 	});
 }
 
@@ -453,6 +452,15 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 #pragma mark -
 
 @implementation MBRoundProgressView
+
+@synthesize progress;
+
+- (void)setProgress:(CGFloat)newProgress {
+	if (newProgress == progress || (newProgress && newProgress < progress))
+		return;
+    progress = newProgress;
+    [self setNeedsDisplay];
+}
 
 - (id)init {
     return [self initWithFrame:CGRectMake(0.0f, 0.0f, 37.0f, 37.0f)];
@@ -491,7 +499,5 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
     CGContextClosePath(context);
     CGContextFillPath(context);
 }
-
-@synthesize progress;
 
 @end
