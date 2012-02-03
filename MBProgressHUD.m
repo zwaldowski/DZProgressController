@@ -10,6 +10,9 @@
 
 #pragma mark Constants and Functions
 
+typedef void(^MBUnlockBlock)(NSTimeInterval);
+typedef void(^MBLockBlock)(const MBUnlockBlock unlock);
+
 const id MBProgressHUDSuccessImageView = @"MBProgressHUDSuccessImageView";
 const id MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
 
@@ -20,7 +23,9 @@ static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
 
-static void dispatch_async_always(dispatch_queue_t queue, dispatch_block_t block) {
+static void dispatch_always_main(dispatch_block_t block) {
+	NSCParameterAssert(block);
+	dispatch_queue_t queue = dispatch_get_main_queue();
 	if (dispatch_get_current_queue() == queue) {
 		block();
 	} else {
@@ -28,28 +33,27 @@ static void dispatch_async_always(dispatch_queue_t queue, dispatch_block_t block
 	}
 }
 
-static void dispatch_semaphore_signal_after(dispatch_semaphore_t semaphore, NSTimeInterval after) {
-	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, after * NSEC_PER_SEC);
-	dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-		dispatch_semaphore_signal(semaphore);
-	});
-}
-
-static void dispatch_async_lock(dispatch_queue_t queue, dispatch_semaphore_t semaphore, void(^block)(dispatch_semaphore_t semaphore)) {
+static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlock block) {
 	NSCParameterAssert(block);
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-		dispatch_async_always(queue, ^{
-			block(semaphore);
+		void (^unlockBlock)(NSTimeInterval) = ^(NSTimeInterval delay){
+			dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
+			dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+				dispatch_semaphore_signal(semaphore);
+			});
+		};
+		dispatch_always_main(^{
+			block(unlockBlock);
 		});
 	});
 }
 
 // Try to acquire the lock. If we can't get it, we're animating so just go ahead and do it.
-static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t semaphore, dispatch_block_t block) {
+static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, dispatch_block_t block) {
 	NSCParameterAssert(block);
 	if (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW) == 0) {
-		dispatch_async_always(queue, ^{
+		dispatch_always_main(^{
 			block();
 			dispatch_semaphore_signal(semaphore);
 		});
@@ -107,12 +111,11 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if (context == &kLabelContext) {
-		if (self.superview) {
-			dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
-				[self setNeedsLayout];
-				[object setNeedsDisplay];
-			});
-		}
+		dispatch_semaphore_execute_optional(animationSemaphore, ^{
+			if (!self.superview)
+				return;
+			[self setNeedsLayout];
+		});
 		
 		return;
 	}
@@ -226,7 +229,7 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
+	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
@@ -236,7 +239,7 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 			self.transform = _rotationTransform;
 			self.alpha = 1.0f;
 		} completion:^(BOOL finished) {
-			dispatch_semaphore_signal_after(semaphore, self.minimumShowTime);
+			unlock(self.minimumShowTime);
 		}];
 	});
 }
@@ -246,7 +249,7 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 }
 
 - (void)hide:(BOOL)animated completion:(dispatch_block_t)completion {
-	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
+	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
 		if (!self.superview || self.alpha < 1.0)
 			return;
 		
@@ -255,6 +258,8 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
+			unlock(0.0);
+			
 			if (wasHiddenBlock)
 				wasHiddenBlock(self);
 			
@@ -263,8 +268,6 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 			
 			if (removeFromSuperViewOnHide)
 				[self removeFromSuperview];
-			
-			dispatch_semaphore_signal(semaphore);
 		}];
 	});
 }
@@ -285,10 +288,12 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 
 - (void)performChanges:(dispatch_block_t)animations {
 	NSCParameterAssert(animations);
-	dispatch_async_lock(dispatch_get_main_queue(), animationSemaphore, ^(dispatch_semaphore_t semaphore) {
-		[UIView transitionWithView:self duration:(1./3.) options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionLayoutSubviews animations:animations completion:^(BOOL finished) {
-			dispatch_semaphore_signal_after(semaphore, self.minimumShowTime);
-		}];
+	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
+		[UIView transitionWithView:self
+						  duration:(1./3.)
+						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight
+						animations:animations
+						completion:^(BOOL finished){ unlock(self.minimumShowTime); }];
 	});
 }
 
@@ -368,34 +373,32 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
 	
 	UIView *newIndicator = nil;
 	
-	if (mode == MBProgressHUDModeDeterminate) {
+	if (mode == MBProgressHUDModeDeterminate)
 		newIndicator = [MBRoundProgressView new];
-	} else if (mode == MBProgressHUDModeIndeterminate) {
-		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-		newIndicator = view;
-	} else if (mode == MBProgressHUDModeCustomView && self.customView) {
+	else if (mode == MBProgressHUDModeIndeterminate)
+		newIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+	else if (mode == MBProgressHUDModeCustomView && self.customView)
 		newIndicator = self.customView;
-	}
 	
-	dispatch_async_if_lock(dispatch_get_main_queue(), animationSemaphore, ^{
+	dispatch_semaphore_execute_optional(animationSemaphore, ^{
 		[indicator removeFromSuperview];
 		indicator = newIndicator;
 		if (!newIndicator)
 			return;
 		[self addSubview:newIndicator];
-		[self setNeedsLayout];
 		if (mode == MBProgressHUDModeIndeterminate)
 			[(UIActivityIndicatorView *)newIndicator startAnimating];
+		[self setNeedsLayout];
 	});
 }
 
 - (void)setCustomView:(UIView *)newCustomView {
 	if ([newCustomView isKindOfClass:[NSString class]]) {
-		if ([(id)newCustomView isEqualToString:MBProgressHUDSuccessImageView]) {
+		if ([newCustomView isEqual:MBProgressHUDSuccessImageView])
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
-		} else if ([(id)newCustomView isEqualToString:MBProgressHUDErrorImageView]) {
+		else if ([newCustomView isEqual:MBProgressHUDErrorImageView])
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"error"]];
-		} else
+		else
 			return;
 	}
 	
@@ -418,7 +421,7 @@ static void dispatch_async_if_lock(dispatch_queue_t queue, dispatch_semaphore_t 
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_async_always(dispatch_get_main_queue(), ^{
+	dispatch_always_main(^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
