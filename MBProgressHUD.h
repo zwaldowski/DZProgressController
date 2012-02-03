@@ -26,9 +26,9 @@ typedef enum {
  * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
  *
  * This is a simple drop-in class for displaying a progress HUD view similar to Apples private UIProgressHUD class.
- * The MBProgressHUD window spans over the entire space given to it by the initWithFrame constructor and catches all
- * user input on this region, thereby preventing the user operations on components below the view. The HUD itself is
- * drawn centered as a rounded semi-transparent view witch resizes depending on the user specified content.
+ * The MBProgressHUD window spans over the entire space given to it by its superview and catches all user
+ * interaction on this region, thereby preventing the user operations on components below the view. The HUD itself
+ * is drawn centered as a rounded semi-transparent view which resizes depending on the user specified content.
  *
  * This view supports three modes of operation:
  * - MBProgressHUDModeIndeterminate - shows a UIActivityIndicatorView
@@ -64,28 +64,13 @@ typedef enum {
  */
 + (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated;
 
-/** 
- * A convenience constructor that initializes the HUD with the window's bounds. Calls the designated constructor with
- * window.bounds as the parameter.
- *
- * @param window The window instance that will provide the bounds for the HUD. Should probably be the same instance as
- * the HUD's superview (i.e., the window that the HUD will be added to).
- */
-- (id)initWithWindow:(UIWindow *)window;
-
-/**
- * A convenience constructor that initializes the HUD with the view's bounds. Calls the designated constructor with
- * view.bounds as the parameter
- * 
- * @param view The view instance that will provide the bounds for the HUD. Should probably be the same instance as
- * the HUD's superview (i.e., the view that the HUD will be added to).
- */
-- (id)initWithView:(UIView *)view;
-
 /**
  * The UIView (i.g., a UIImageView) to be shown when the HUD is in MBProgressHUDModeCustomView.
  * For best results use a 37 by 37 pixel view (so the bounds match the build in indicator bounds). 
- */
+ *
+ * Pass `MBProgressHUDSuccessImageView` for an image view with a check.
+ * Pass `MBProgressHUDErrorImageView`, for an image view with an error symbol.
+ **/
 @property (nonatomic, strong) UIView *customView;
 
 /** 

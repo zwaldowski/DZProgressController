@@ -22,7 +22,7 @@
 
 - (IBAction)showSimple:(id)sender {
     // The hud will dispable all input on the view (use the higest view possible in the view hierarchy)
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
     [self.navigationController.view addSubview:HUD];
 	
     // Remove it from the window at the right time
@@ -37,8 +37,7 @@
 }
 
 - (IBAction)showWithLabel:(id)sender {
-
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
 	
 	HUD.label.text = @"Loading";
@@ -52,7 +51,7 @@
 }
 
 - (IBAction)showWithLabelDeterminate:(id)sender {
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
 	
     // Set determinate mode
@@ -69,8 +68,7 @@
 }
 
 - (IBAction)showWithCustomView:(id)sender {
-
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
 	
 	HUD.customView = MBProgressHUDSuccessImageView;
@@ -87,7 +85,7 @@
 }
 
 - (IBAction)showWithLabelMixed:(id)sender {
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
 	
     HUD.label.text = @"Connecting";
@@ -101,7 +99,7 @@
 }
 
 - (IBAction)showUsingBlocks:(id)sender {
-	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    MBProgressHUD *hud = [MBProgressHUD new];
 	[self.navigationController.view addSubview:hud];
 	hud.label.text = @"Loading";
 	hud.removeFromSuperViewOnHide = YES;
@@ -112,7 +110,7 @@
 
 - (IBAction)showOnWindow:(id)sender {
 	// The hud will dispable all input on the window
-    HUD = [[MBProgressHUD alloc] initWithView:self.view.window];
+    HUD = [MBProgressHUD new];
     [self.view.window addSubview:HUD];
 	
 	HUD.removeFromSuperViewOnHide = YES;
@@ -135,7 +133,7 @@
 }
 
 - (IBAction)showWithGradient:(id)sender {
-    HUD = [[MBProgressHUD alloc] initWithView:self.navigationController.view];
+    HUD = [MBProgressHUD new];
 	[self.navigationController.view addSubview:HUD];
 	
 	// Regiser for HUD callbacks so we can remove it from the window at the right time

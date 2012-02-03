@@ -35,6 +35,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	CGAffineTransform _rotationTransform;
 	NSTimeInterval _showStarted;
 	__unsafe_unretained UIView *indicator;
+	dispatch_semaphore_t animationSemaphore;
 }
 
 #pragma mark Accessors
@@ -49,7 +50,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark - Class methods
 
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
-	MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:view];
+	MBProgressHUD *hud = [MBProgressHUD new];
 	[view addSubview:hud];
 	[hud show:animated];
 	return hud;
@@ -141,24 +142,12 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 
 #pragma mark - Setup and teardown
 
-- (id)initWithWindow:(UIWindow *)window {
-    return [self initWithView:window];
-}
-
-- (id)initWithView:(UIView *)view {
-	// Let's check if the view is nil (this is a common error when using the windw initializer above)
-	NSAssert(view, @"The view used in the MBProgressHUD initializer is nil.");
-	if ((self = [self initWithFrame:view.bounds])) {
-		if ([view isKindOfClass:[UIWindow class]])
-			[self reloadOrientation:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
-	}
-	return self;
-}
-
 - (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-	if (self) {
+	return [self init];
+}
+
+- (id)init {
+	if ((self = [super initWithFrame:CGRectZero])) {
         // Set default values for properties
         self.mode = MBProgressHUDModeIndeterminate;
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -173,6 +162,8 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		
 		UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognizerFired:)];
 		[self addGestureRecognizer:recognizer];
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
     }
     return self;
 }
@@ -185,6 +176,13 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 }
 
 #pragma mark - Lifecycle methods
+
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+	self.frame = newSuperview.bounds;
+	if ([newSuperview isKindOfClass:[UIWindow class]])
+		[self reloadOrientation:nil];
+	[super willMoveToSuperview:newSuperview];
+}
 
 - (void)removeFromSuperview {
     [super removeFromSuperview];
