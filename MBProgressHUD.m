@@ -20,11 +20,27 @@ static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
 
-static void dispatch_always_main_queue(dispatch_block_t block) {
+static void dispatch_always_main(dispatch_block_t block) {
 	if ([NSThread isMainThread])
 		block();
 	else
 		dispatch_async(dispatch_get_main_queue(), block);
+	
+	
+}
+
+static void dispatch_always_main_lock(dispatch_semaphore_t semaphore, NSTimeInterval fireDelay, void(^block)(dispatch_semaphore_t semaphore)) {
+	NSCParameterAssert(block);
+	dispatch_block_t blockDispatch = ^{
+		block(semaphore);
+	};
+	dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+	if (fireDelay <= 0.0)
+		dispatch_always_main(blockDispatch);
+	else {
+		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, fireDelay * NSEC_PER_SEC);
+		dispatch_after(popTime, dispatch_get_main_queue(), blockDispatch);
+	}
 }
 
 #pragma mark -
@@ -78,7 +94,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if (context == &kLabelContext) {
 		if (self.superview) {
-			dispatch_always_main_queue(^{
+			dispatch_always_main(^{
 				[self setNeedsLayout];
 				[object setNeedsDisplay];
 			});
@@ -164,11 +180,14 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 		[self addGestureRecognizer:recognizer];
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
+		
+		animationSemaphore = dispatch_semaphore_create(1);
     }
     return self;
 }
 
 - (void)dealloc {
+	dispatch_release(animationSemaphore);
 	[label removeObserver:self forKeyPath:@"text"];
 	[label removeObserver:self forKeyPath:@"font"];
 	[label removeObserver:self forKeyPath:@"textColor"];
@@ -192,7 +211,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	dispatch_always_main_queue(^{
+	dispatch_always_main(^{
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
@@ -212,19 +231,18 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 }
 
 - (void)hide:(BOOL)animated afterDelay:(NSTimeInterval)delay {
-	if (!self.superview)
-		return;
-	
-	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
-	dispatch_after(popTime, dispatch_get_main_queue(), ^{
-		NSTimeInterval length = animated ? (1./3.) : 0;
-		NSTimeInterval delay = 0.0;
+	dispatch_always_main_lock(animationSemaphore, delay, ^(dispatch_semaphore_t semaphore) {
+		if (!self.superview || self.alpha < 1.0)
+			return;
+		
+		NSTimeInterval animationLength = animated ? (1./3.) : 0;
+		NSTimeInterval animationDelay = 0.0;
 		if (_showStarted) {
-			delay = minimumShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
+			animationDelay = minimumShowTime - ([[NSDate date] timeIntervalSinceReferenceDate] - _showStarted);
 			_showStarted = 0.0;
 		}
 		
-		[UIView animateWithDuration:length delay:delay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[UIView animateWithDuration:animationLength delay:animationDelay options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
@@ -233,6 +251,8 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 			
 			if (removeFromSuperViewOnHide)
 				[self removeFromSuperview];
+			
+			dispatch_semaphore_signal(semaphore);
 		}];
 	});
 }
@@ -344,7 +364,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
 	
 	_showStarted = [[NSDate date] timeIntervalSinceReferenceDate];
 	
-	dispatch_always_main_queue(^{
+	dispatch_always_main(^{
 		if (indicator)
 			[indicator removeFromSuperview];
 		
@@ -389,7 +409,7 @@ static void dispatch_always_main_queue(dispatch_block_t block) {
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_always_main_queue(^{
+	dispatch_always_main(^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
