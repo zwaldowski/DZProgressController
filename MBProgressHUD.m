@@ -55,8 +55,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	UIStatusBarStyle _statusBarStyle;
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
-	__unsafe_unretained UIView *indicator;
-	dispatch_semaphore_t animationSemaphore;
+	__unsafe_unretained UIView *_indicator;
+	dispatch_semaphore_t _animationSemaphore;
 }
 
 #pragma mark Accessors
@@ -102,11 +102,11 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 			return;
 		
 		// Only relayout if we we aren't animating, i.e., if we can get the animation lock.
-		if (dispatch_semaphore_wait(animationSemaphore, DISPATCH_TIME_NOW) == 0) {
+		if (dispatch_semaphore_wait(_animationSemaphore, DISPATCH_TIME_NOW) == 0) {
 			dispatch_reentrant_main(^{
 				[self setNeedsLayout];
 			});
-			dispatch_semaphore_signal(animationSemaphore);
+			dispatch_semaphore_signal(_animationSemaphore);
 		}
 		
 		return;
@@ -144,10 +144,10 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 			self.transform = _rotationTransform;
 			return;
 		}
-		
-		[UIView animateWithDuration:(1./3.) animations:^{
+				
+		[UIView animateWithDuration:(1./3.) delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
 			self.transform = _rotationTransform;
-		}];
+		} completion:NULL];
 	} else {
 		self.bounds = self.superview.bounds;
 		[self setNeedsDisplay];
@@ -169,8 +169,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	if (!newIndicator)
 		newIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
 	
-	[indicator removeFromSuperview];
-	indicator = newIndicator;
+	[_indicator removeFromSuperview];
+	_indicator = newIndicator;
 	[self addSubview:newIndicator];
 	if (mode == MBProgressHUDModeIndeterminate)
 		[(UIActivityIndicatorView *)newIndicator startAnimating];
@@ -185,7 +185,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 - (id)init {
 	if ((self = [super initWithFrame:CGRectZero])) {		
-		animationSemaphore = dispatch_semaphore_create(1);
+		_animationSemaphore = dispatch_semaphore_create(1);
 
         // Set default values for properties
 		[self reloadIndicatorView:nil];
@@ -206,8 +206,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)dealloc {
-	if (animationSemaphore)
-		dispatch_release(animationSemaphore);
+	if (_animationSemaphore)
+		dispatch_release(_animationSemaphore);
 	[label removeObserver:self forKeyPath:@"text"];
 	[label removeObserver:self forKeyPath:@"font"];
 	[label removeObserver:self forKeyPath:@"textColor"];
@@ -231,13 +231,13 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
-	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
 		
 		NSTimeInterval length = animated ? (1./3.) : 0;
-		[UIView animateWithDuration:length delay:self.showDelayTime options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction animations:^{
+		[UIView animateWithDuration:length delay:self.showDelayTime options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionAllowAnimatedContent animations:^{
 			self.transform = _rotationTransform;
 			self.alpha = 1.0f;
 		} completion:^(BOOL finished) {
@@ -251,12 +251,12 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)hide:(BOOL)animated completion:(dispatch_block_t)completion {
-	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
 		if (!self.superview || self.alpha < 1.0)
 			return;
 		
 		NSTimeInterval animationLength = animated ? (1./3.) : 0;
-		[UIView animateWithDuration:animationLength delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[UIView animateWithDuration:animationLength delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
 			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
 			self.alpha = 0.0f;
 		} completion:^(BOOL finished) {
@@ -290,7 +290,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 - (void)performChanges:(dispatch_block_t)animations {
 	NSCParameterAssert(animations);
-	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
 		[UIView transitionWithView:self
 						  duration:(1./3.)
 						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionLayoutSubviews|UIViewAnimationOptionAllowAnimatedContent
@@ -315,7 +315,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)layoutSubviews {
-	CGRect frame = self.bounds, lFrame = CGRectZero, indFrame = indicator.bounds;
+	CGRect frame = self.bounds, lFrame = CGRectZero, indFrame = _indicator.bounds;
 	CGSize newSize = CGSizeMake(indFrame.size.width + 2 * margin, indFrame.size.height + 2 * margin);
 	
 	if (CGRectEqualToRect(frame, self.window.bounds)) {
@@ -352,7 +352,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
     }
 	
 	label.frame = lFrame;
-	indicator.frame = indFrame;
+	_indicator.frame = indFrame;
 	
 	if (newSize.width < minSize.width)
 		newSize.width = minSize.width;
@@ -408,7 +408,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
     if (mode != MBProgressHUDModeDeterminate)
 		return 0.0f;
 	
-	return [(MBRoundProgressView *)indicator progress];
+	return [(MBRoundProgressView *)_indicator progress];
 }
 
 - (void)setProgress:(CGFloat)newProgress {
@@ -416,9 +416,9 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		return;
 	
 	dispatch_reentrant_main(^{
-		if (![indicator isKindOfClass:[MBRoundProgressView class]])
+		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
-		[(MBRoundProgressView *)indicator setProgress:newProgress];
+		[(MBRoundProgressView *)_indicator setProgress:newProgress];
 	});
 }
 
