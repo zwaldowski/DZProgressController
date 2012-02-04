@@ -232,6 +232,12 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 - (void)show:(BOOL)animated {
 	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
+		if (!self.superview) {
+			UIWindow *newSuperview = [[[UIApplication sharedApplication] delegate] respondsToSelector:@selector(window)] ? [[[UIApplication sharedApplication] delegate] window] : [[[UIApplication sharedApplication] windows] objectAtIndex:0];
+			[newSuperview addSubview:self];
+			self.removeFromSuperViewOnHide = YES;
+		}
+		
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
