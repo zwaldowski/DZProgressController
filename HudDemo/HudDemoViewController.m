@@ -78,7 +78,6 @@
 	[connection start];
 	
 	HUD = [MBProgressHUD new];
-	HUD.minimumShowTime = 2.0;
 	[HUD show:YES];
 }
 
@@ -88,7 +87,6 @@
 	inlineHUD.customView = MBProgressHUDSuccessImageView;
     inlineHUD.mode = MBProgressHUDModeCustomView;
     inlineHUD.label.text = @"Completed";
-	inlineHUD.minimumShowTime = 2.0f;
 	
     [inlineHUD show:YES];
 	[inlineHUD hide:YES];
@@ -100,7 +98,6 @@
     inlineHUD.mode = MBProgressHUDModeCustomView;
 	inlineHUD.customView = MBProgressHUDErrorImageView;
     inlineHUD.label.text = @"Failed";
-	inlineHUD.minimumShowTime = 2.0f;
 	
     [inlineHUD show:YES];
 	[inlineHUD hide:YES];

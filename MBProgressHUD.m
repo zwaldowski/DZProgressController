@@ -186,16 +186,17 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 - (id)init {
 	if ((self = [super initWithFrame:CGRectZero])) {		
 		_animationSemaphore = dispatch_semaphore_create(1);
+		_rotationTransform = CGAffineTransformIdentity;
 
         // Set default values for properties
 		[self reloadIndicatorView:nil];
+		self.minimumShowTime = 1.5;
+		
 		
         // UIView properties
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
         self.opaque = NO;
         self.alpha = 0.0f;
-		
-		_rotationTransform = CGAffineTransformIdentity;
 		
 		UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognizerFired:)];
 		[self addGestureRecognizer:recognizer];

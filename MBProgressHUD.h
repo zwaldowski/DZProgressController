@@ -107,7 +107,7 @@ typedef enum {
  * The minimum time (in seconds) that the HUD is shown. 
  * This avoids the problem of the HUD being shown and than instantly hidden.
  *
- * Defaults to 0.0. If you don't set one and your task might run short,
+ * Defaults to 1.5. If you don't set one and your task might run short,
  * it is recommended to instead set a show delay time.
  *
  * @see showDelayTime
