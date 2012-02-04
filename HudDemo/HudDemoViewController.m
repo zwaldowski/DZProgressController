@@ -91,19 +91,6 @@
 	}];
 }
 
-- (IBAction)showOnWindow:(id)sender {
-	// The hud will dispable all input on the window
-    HUD = [MBProgressHUD new];
-    [self.view.window addSubview:HUD];
-	
-	HUD.removeFromSuperViewOnHide = YES;
-    HUD.label.text = @"Loading";
-	
-	[HUD showWhileExecuting:^{
-		[self myTask];
-	}];
-}
-
 - (IBAction)showURL:(id)sender {
 	NSURL *URL = [NSURL URLWithString:@"https://github.com/matej/MBProgressHUD/zipball/master"];
 	NSURLRequest *request = [NSURLRequest requestWithURL:URL];
