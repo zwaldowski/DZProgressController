@@ -23,7 +23,7 @@ static const CGFloat radius = 10.0f;
 
 static char kLabelContext;
 
-static void dispatch_always_main(dispatch_block_t block) {
+static void dispatch_reentrant_main(dispatch_block_t block) {
 	NSCParameterAssert(block);
 	dispatch_queue_t queue = dispatch_get_main_queue();
 	if (dispatch_get_current_queue() == queue) {
@@ -43,23 +43,10 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 				dispatch_semaphore_signal(semaphore);
 			});
 		};
-		dispatch_always_main(^{
+		dispatch_reentrant_main(^{
 			block(unlockBlock);
 		});
 	});
-}
-
-// Try to acquire the lock. If we can't get it, we're animating so just go ahead and do it.
-static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, dispatch_block_t block) {
-	NSCParameterAssert(block);
-	if (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW) == 0) {
-		dispatch_always_main(^{
-			block();
-			dispatch_semaphore_signal(semaphore);
-		});
-	} else {
-		block();
-	}
 }
 
 #pragma mark -
@@ -107,15 +94,20 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 	}
 }
 
-#pragma mark - Internal notifications
+#pragma mark - Private notifications
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if (context == &kLabelContext) {
-		dispatch_semaphore_execute_optional(animationSemaphore, ^{
-			if (!self.superview)
-				return;
-			[self setNeedsLayout];
-		});
+		if (!self.superview)
+			return;
+		
+		// Only relayout if we we aren't animating, i.e., if we can get the animation lock.
+		if (dispatch_semaphore_wait(animationSemaphore, DISPATCH_TIME_NOW) == 0) {
+			dispatch_reentrant_main(^{
+				[self setNeedsLayout];
+			});
+			dispatch_semaphore_signal(animationSemaphore);
+		}
 		
 		return;
 	}
@@ -173,6 +165,18 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 		wasTappedBlock(self);
 }
 
+- (void)reloadIndicatorView:(UIView *)newIndicator {
+	if (!newIndicator)
+		newIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+	
+	[indicator removeFromSuperview];
+	indicator = newIndicator;
+	[self addSubview:newIndicator];
+	if (mode == MBProgressHUDModeIndeterminate)
+		[(UIActivityIndicatorView *)newIndicator startAnimating];
+	[self setNeedsLayout];
+}
+
 #pragma mark - Setup and teardown
 
 - (id)initWithFrame:(CGRect)frame {
@@ -184,13 +188,11 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 		animationSemaphore = dispatch_semaphore_create(1);
 
         // Set default values for properties
-        self.mode = MBProgressHUDModeIndeterminate;
+		[self reloadIndicatorView:nil];
+		
+        // UIView properties
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-		
-        // Transparent background
         self.opaque = NO;
-		
-        // Make invisible for now
         self.alpha = 0.0f;
 		
 		_rotationTransform = CGAffineTransformIdentity;
@@ -291,7 +293,7 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 	dispatch_semaphore_execute(animationSemaphore, ^(const MBUnlockBlock unlock) {
 		[UIView transitionWithView:self
 						  duration:(1./3.)
-						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight
+						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionLayoutSubviews|UIViewAnimationOptionAllowAnimatedContent
 						animations:animations
 						completion:^(BOOL finished){ unlock(self.minimumShowTime); }];
 	});
@@ -380,15 +382,8 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 	else if (mode == MBProgressHUDModeCustomView && self.customView)
 		newIndicator = self.customView;
 	
-	dispatch_semaphore_execute_optional(animationSemaphore, ^{
-		[indicator removeFromSuperview];
-		indicator = newIndicator;
-		if (!newIndicator)
-			return;
-		[self addSubview:newIndicator];
-		if (mode == MBProgressHUDModeIndeterminate)
-			[(UIActivityIndicatorView *)newIndicator startAnimating];
-		[self setNeedsLayout];
+	dispatch_reentrant_main(^{
+		[self reloadIndicatorView:newIndicator];
 	});
 }
 
@@ -404,10 +399,9 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
 	
 	customView = newCustomView;
 	
-	if (mode == MBProgressHUDModeCustomView) {
-		mode = MBProgressHUDModeIndeterminate;
-		self.mode = MBProgressHUDModeCustomView;
-	}
+	dispatch_reentrant_main(^{
+		[self reloadIndicatorView:newCustomView];
+	});
 }
 
 - (CGFloat)progress {
@@ -421,7 +415,7 @@ static void dispatch_semaphore_execute_optional(dispatch_semaphore_t semaphore, 
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
-	dispatch_always_main(^{
+	dispatch_reentrant_main(^{
 		if (![indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		[(MBRoundProgressView *)indicator setProgress:newProgress];
