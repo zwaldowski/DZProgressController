@@ -27,7 +27,7 @@ typedef enum {
  *
  * This is a simple drop-in class for displaying a progress HUD view similar to the
  * private UIProgressHUD. The HUD view spans over the entire space given to it by
- * its superview and catches all touchs on that region, thereby preventing user
+ * its superview and catches all touches on that region, thereby preventing user
  * interaction on components below the view. The HUD itself is drawn centered as
  * a rounded semi-transparent box that resizes depending on its content.
  *
@@ -125,15 +125,10 @@ typedef enum {
  */
 @property (nonatomic) NSTimeInterval minimumShowTime;
 
-/** Removes the HUD from its parent view when hidden. Defaults to NO. */
-@property (nonatomic) BOOL removeFromSuperViewOnHide;
-
 /** Returns the label used for the main textual content of the HUD. */
 @property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
-/** 
- * The progress of the progress indicator, from 0.0 to 1.0.
- */
+/** The progress of the progress indicator, from 0.0 to 1.0. */
 @property (nonatomic) CGFloat progress;
 
 /** 
@@ -153,22 +148,21 @@ typedef enum {
 - (void)show:(BOOL)animated;
 
 /** 
- * Hide the HUD. Use it to hide the HUD when your task completes.
+ * Display the HUD on a given view.
  *
- * @param animated If set to YES, the HUD will disappear with an animated transition.
- * @see hide:completion:
+ * All user interaction on the view is disabled while the HUD is shown.
+ *
+ * @param view The view to be displayed on, or the current window if nil.
+ * @param animated If set to YES, the HUD will appear with an animated transition.
  */
-- (void)hide:(BOOL)animated;
+- (void)showOnView:(UIView *)view animated:(BOOL)animated;
 
 /** 
- * Hide the HUD with a completion callback. Use it to hide the HUD when your task completes.
+ * Remove the HUD from its view. Use it to hide the HUD when your task completes.
  *
- * @param animated If set to YES, the HUD will disappear using the current animation type.
- * @param completion A block to be called once the HUD has disappeared.
- * @see hide:
- * @see wasHiddenBlock
+ * @param animated If set to YES, the HUD will disappear with an animated transition.
  */
-- (void)hide:(BOOL)animated completion:(dispatch_block_t)completion;
+- (void)hide:(BOOL)animated;
 
 /** 
  * Shows the HUD while a task is executing in a background queue, then hides it.

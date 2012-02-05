@@ -64,7 +64,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 @synthesize mode;
 @synthesize customView;
 @synthesize wasTappedBlock, wasHiddenBlock;
-@synthesize removeFromSuperViewOnHide;
 @synthesize showDelayTime, minimumShowTime;
 @synthesize label;
 
@@ -72,7 +71,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 + (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
 	MBProgressHUD *hud = [MBProgressHUD new];
-	[view addSubview:hud];
 	[hud show:animated];
 	return hud;
 }
@@ -86,7 +84,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	}
 	if (viewToRemove != nil) {
 		MBProgressHUD *HUD = (MBProgressHUD *)viewToRemove;
-		HUD.removeFromSuperViewOnHide = YES;
 		[HUD hide:animated];
 		return YES;
 	} else {
@@ -128,15 +125,12 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	if (!self.superview)
 		return;
 	
+	// Stay in sync with the superview
+	self.bounds = self.superview.bounds;
+	
 	if ([self.superview isKindOfClass:[UIWindow class]]) {
 		UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
 		NSInteger degrees = 0;
-		
-		// Stay in sync with the superview
-		if (self.superview) {
-			self.bounds = self.superview.bounds;
-			[self setNeedsDisplay];
-		}
 		
 		if (UIInterfaceOrientationIsLandscape(orientation)) {
 			if (orientation == UIInterfaceOrientationLandscapeLeft) { degrees = -90; } 
@@ -158,9 +152,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		[UIView animateWithDuration:(1./3.) delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
 			self.transform = _rotationTransform;
 		} completion:NULL];
-	} else {
-		self.bounds = self.superview.bounds;
-		[self setNeedsDisplay];
 	}
 }
 
@@ -242,12 +233,16 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 #pragma mark - Showing and hiding
 
 - (void)show:(BOOL)animated {
+	[self showOnView:nil animated:animated];
+}
+
+- (void)showOnView:(UIView *)view animated:(BOOL)animated {
+	if (!self.superview && !view)
+		view = [[[UIApplication sharedApplication] delegate] respondsToSelector:@selector(window)] ? [[[UIApplication sharedApplication] delegate] window] : [[[UIApplication sharedApplication] windows] objectAtIndex:0];
+	
 	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
-		if (!self.superview) {
-			UIWindow *newSuperview = [[[UIApplication sharedApplication] delegate] respondsToSelector:@selector(window)] ? [[[UIApplication sharedApplication] delegate] window] : [[[UIApplication sharedApplication] windows] objectAtIndex:0];
-			[newSuperview addSubview:self];
-			self.removeFromSuperViewOnHide = YES;
-		}
+		if (!self.superview)				
+			[view addSubview:self];
 		
 		[self reloadOrientation:nil];
 		self.alpha = 0.0f;
@@ -264,10 +259,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)hide:(BOOL)animated {
-	[self hide:animated completion:NULL];
-}
-
-- (void)hide:(BOOL)animated completion:(dispatch_block_t)completion {
 	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
 		if (!self.superview || self.alpha < 1.0)
 			return;
@@ -282,10 +273,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 			if (wasHiddenBlock)
 				wasHiddenBlock(self);
 			
-			if (completion)
-				completion();
-			
-			if (removeFromSuperViewOnHide)
+			if (self.superview)
 				[self removeFromSuperview];
 		}];
 	});
