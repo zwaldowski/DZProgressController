@@ -194,4 +194,6 @@ typedef enum {
 
 @property (nonatomic) CGFloat progress;
 
+- (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
+
 @end

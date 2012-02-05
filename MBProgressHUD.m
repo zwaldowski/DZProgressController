@@ -430,11 +430,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		
-		NSTimeInterval length = animated ? (1./3.) : 0.0;
-		
-		[UIView animateWithDuration:length delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-			[(MBRoundProgressView *)_indicator setProgress:newProgress];
-		} completion:NULL];
+		[(MBRoundProgressView *)_indicator setProgress:newProgress animated:animated];
 	});
 }
 
@@ -485,7 +481,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	
 	CGFloat radius = CGRectGetMidX(circleRect);
 	CGPoint center = CGPointMake(radius, CGRectGetMidY(circleRect));
-	CGFloat startAngle = -M_PI / 2; // 90 degrees
+	CGFloat startAngle = -M_PI / 2;
 	CGFloat endAngle = self.progress * 2 * M_PI + startAngle;
 	CGContextSetFillColorWithColor(context, self.borderColor);
 	CGContextMoveToPoint(context, center.x, center.y);
@@ -530,7 +526,15 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)setProgress:(CGFloat)progress {
-	[(MBRoundProgressLayer *)self.layer setProgress:progress];
+	[self setProgress:progress animated:NO];
+}
+
+- (void)setProgress:(CGFloat)progress animated:(BOOL)animated {
+	NSTimeInterval length = animated ? (1./3.) : 0.0;
+	
+	[UIView animateWithDuration:length delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+		[(MBRoundProgressLayer *)self.layer setProgress:progress];
+	} completion:NULL];
 }
 
 - (CGFloat)progress {
