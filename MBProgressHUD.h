@@ -44,24 +44,38 @@ typedef enum {
 @interface MBProgressHUD : UIView
 
 /**
- * Creates a new HUD, adds it to provided view and shows it.
+ * Creates a new HUD and shows it on the current window.
  * 
- * @param view The view that the HUD will be added to
- * @return A reference to the created HUD.
+ * @returns A reference to the created HUD.
  *
- * @see hideHUDForView:
+ * @see showOnView:
+ * @see hide
  */
-+ (MBProgressHUD *)showHUDAddedTo:(UIView *)view;
++ (MBProgressHUD *)show;
 
 /**
- * Finds a HUD subview and hides it.
+ * Creates a new HUD and shows it on the provided view.
+ * 
+ * @param view The view that the HUD will be added to.
+ * @return A reference to the created HUD.
  *
- * @param view The view that is going to be searched for a HUD subview.
- * @return YES if a HUD was found and removed, NO otherwise. 
- *
- * @see showHUDAddedTo:
+ * @see show
+ * @see hide
  */
-+ (BOOL)hideHUDForView:(UIView *)view;
++ (MBProgressHUD *)showOnView:(UIView *)view;
+
+/**
+ * Shows a HUD on the current window using while executing a block in the background.
+ *
+ * The block is executed from a separate queue unrelated to the UI main thread. The HUD is passed
+ * as an argument to the block for progress updates, changes, and so on. The HUD should not be
+ * dismissed from within the block; instead, bail out using a return statement.
+ *
+ * @param block A code block to be executed. Should not be NULL.
+ *
+ * @see showWithText:whileExecuting:
+ */
++ (void)showWhileExecuting:(void(^)(MBProgressHUD *))block;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.

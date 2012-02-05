@@ -69,26 +69,18 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark - Class methods
 
-+ (MBProgressHUD *)showHUDAddedTo:(UIView *)view {
++ (MBProgressHUD *)show {
+	return [self showOnView:nil];
+}
+
++ (MBProgressHUD *)showOnView:(UIView *)view {
 	MBProgressHUD *hud = [MBProgressHUD new];
 	[hud showOnView:view];
 	return hud;
 }
 
-+ (BOOL)hideHUDForView:(UIView *)view {
-	UIView *viewToRemove = nil;
-	for (UIView *v in [view subviews]) {
-		if ([v isKindOfClass:[MBProgressHUD class]]) {
-			viewToRemove = v;
-		}
-	}
-	if (viewToRemove != nil) {
-		MBProgressHUD *HUD = (MBProgressHUD *)viewToRemove;
-		[HUD hide];
-		return YES;
-	} else {
-		return NO;
-	}
++ (void)showWhileExecuting:(void(^)(MBProgressHUD *))block {
+	[self showWithText:nil whileExecuting:block];
 }
 
 + (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(MBProgressHUD *))block {
