@@ -74,7 +74,7 @@
 	[connection start];
 	
 	HUD = [MBProgressHUD new];
-	[HUD show:YES];
+	[HUD show];
 }
 
 - (IBAction)showWithSuccess:(id)sender {
@@ -84,8 +84,8 @@
     inlineHUD.mode = MBProgressHUDModeCustomView;
     inlineHUD.label.text = @"Completed";
 	
-    [inlineHUD show:YES];
-	[inlineHUD hide:YES];
+    [inlineHUD show];
+	[inlineHUD hide];
 }
 
 - (IBAction)showWithError:(id)sender {
@@ -95,8 +95,8 @@
 	inlineHUD.customView = MBProgressHUDErrorImageView;
     inlineHUD.label.text = @"Failed";
 	
-    [inlineHUD show:YES];
-	[inlineHUD hide:YES];
+    [inlineHUD show];
+    [inlineHUD hide];
 }
 
 #pragma mark -
@@ -119,8 +119,8 @@
 - (void)myMixedTask {
     // Indeterminate mode
     sleep(2);
-    // Switch to determinate mode
 	
+    // Switch to determinate mode
 	[HUD performChanges:^{
 		HUD.mode = MBProgressHUDModeDeterminate;
 		HUD.label.text = @"Progress";
@@ -133,6 +133,7 @@
         HUD.progress = progress;
         usleep(50000);
     }
+	
     // Back to indeterminate mode
 	[HUD performChanges:^{
 		HUD.mode = MBProgressHUDModeIndeterminate;
@@ -155,7 +156,9 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	expectedLength = [response expectedContentLength];
 	currentLength = 0;
-	HUD.mode = MBProgressHUDModeDeterminate;
+	[HUD performChanges:^{
+		HUD.mode = MBProgressHUDModeDeterminate;
+	}];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
@@ -164,13 +167,19 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	HUD.customView = MBProgressHUDSuccessImageView;
-    HUD.mode = MBProgressHUDModeCustomView;
-	[HUD hide:YES];
+	[HUD performChanges:^{
+		HUD.customView = MBProgressHUDSuccessImageView;
+		HUD.mode = MBProgressHUDModeCustomView;
+	}];
+	[HUD hide];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	[HUD hide:YES];
+	[HUD performChanges:^{
+		HUD.customView = MBProgressHUDErrorImageView;
+		HUD.mode = MBProgressHUDModeCustomView;
+	}];
+	[HUD hide];
 }
 
 @end

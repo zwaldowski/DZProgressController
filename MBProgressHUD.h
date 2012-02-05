@@ -47,23 +47,21 @@ typedef enum {
  * Creates a new HUD, adds it to provided view and shows it.
  * 
  * @param view The view that the HUD will be added to
- * @param animated If set to YES, the HUD will disappear with an animated transition.
  * @return A reference to the created HUD.
  *
- * @see hideHUDForView:animated:
+ * @see hideHUDForView:
  */
-+ (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated;
++ (MBProgressHUD *)showHUDAddedTo:(UIView *)view;
 
 /**
  * Finds a HUD subview and hides it.
  *
  * @param view The view that is going to be searched for a HUD subview.
- * @param animated If set to YES, the HUD will disappear with an animated transition.
  * @return YES if a HUD was found and removed, NO otherwise. 
  *
- * @see showHUDAddedTo:animated:
+ * @see showHUDAddedTo:
  */
-+ (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated;
++ (BOOL)hideHUDForView:(UIView *)view;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.
@@ -125,10 +123,14 @@ typedef enum {
  */
 @property (nonatomic) NSTimeInterval minimumShowTime;
 
-/** Returns the label used for the main textual content of the HUD. */
+/**
+ * Returns the label used for the main textual content of the HUD.
+ */
 @property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
-/** The progress of the progress indicator, from 0.0 to 1.0. */
+/**
+ * The progress of the progress indicator, from 0.0 to 1.0.
+ */
 @property (nonatomic) CGFloat progress;
 
 /** 
@@ -139,38 +141,33 @@ typedef enum {
  */
 - (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
 
-/** 
- * Display the HUD.
+/** Display the HUD.
  *
- * @param animated If set to YES, the HUD will disappear with an animated transition.
- * If set to NO the HUD will not use animations while disappearing.
+ * All user interaction on the view is disabled while the HUD is shown.
+ *
+ * @see showOnView:
  */
-- (void)show:(BOOL)animated;
+- (void)show;
 
 /** 
  * Display the HUD on a given view.
  *
  * All user interaction on the view is disabled while the HUD is shown.
  *
- * @param view The view to be displayed on, or the current window if nil.
- * @param animated If set to YES, the HUD will appear with an animated transition.
+ * @see show
  */
-- (void)showOnView:(UIView *)view animated:(BOOL)animated;
+- (void)showOnView:(UIView *)view;
 
 /** 
  * Remove the HUD from its view. Use it to hide the HUD when your task completes.
- *
- * @param animated If set to YES, the HUD will disappear with an animated transition.
  */
-- (void)hide:(BOOL)animated;
+- (void)hide;
 
 /** 
  * Shows the HUD while a task is executing in a background queue, then hides it.
  *
  * This method also takes care of an autorelease pools so your method does not have
  * to be concerned with setting one up.
- *
- * The HUD will appear and disappear using the current animationType.
  *
  * @param block A code block to be executed while the HUD is shown.
  */
@@ -189,7 +186,9 @@ typedef enum {
 
 #pragma mark -
 
-/** A progress view for showing definite progress by filling up a circle (pie chart). */
+/**
+ * A progress view for showing definite progress by filling up a circle (pie chart).
+ */
 @interface MBRoundProgressView : UIView
 
 @property (nonatomic) CGFloat progress;

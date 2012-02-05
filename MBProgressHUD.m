@@ -69,13 +69,13 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark - Class methods
 
-+ (MBProgressHUD *)showHUDAddedTo:(UIView *)view animated:(BOOL)animated {
++ (MBProgressHUD *)showHUDAddedTo:(UIView *)view {
 	MBProgressHUD *hud = [MBProgressHUD new];
-	[hud show:animated];
+	[hud showOnView:view];
 	return hud;
 }
 
-+ (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated {
++ (BOOL)hideHUDForView:(UIView *)view {
 	UIView *viewToRemove = nil;
 	for (UIView *v in [view subviews]) {
 		if ([v isKindOfClass:[MBProgressHUD class]]) {
@@ -84,7 +84,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	}
 	if (viewToRemove != nil) {
 		MBProgressHUD *HUD = (MBProgressHUD *)viewToRemove;
-		[HUD hide:animated];
+		[HUD hide];
 		return YES;
 	} else {
 		return NO;
@@ -232,11 +232,11 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark - Showing and hiding
 
-- (void)show:(BOOL)animated {
-	[self showOnView:nil animated:animated];
+- (void)show {
+	[self showOnView:nil];
 }
 
-- (void)showOnView:(UIView *)view animated:(BOOL)animated {
+- (void)showOnView:(UIView *)view {
 	if (!self.superview && !view)
 		view = [[[UIApplication sharedApplication] delegate] respondsToSelector:@selector(window)] ? [[[UIApplication sharedApplication] delegate] window] : [[[UIApplication sharedApplication] windows] objectAtIndex:0];
 	
@@ -248,48 +248,52 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		self.alpha = 0.0f;
 		self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
 		
-		NSTimeInterval length = animated ? (1./3.) : 0;
-		[UIView animateWithDuration:length delay:self.showDelayTime options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
-			self.transform = _rotationTransform;
-			self.alpha = 1.0f;
-		} completion:^(BOOL finished) {
-			unlock(self.minimumShowTime);
-		}];
+		[UIView animateWithDuration: (1./3.)
+							  delay: self.showDelayTime
+							options: (UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowAnimatedContent)
+						 animations: ^{
+							 self.transform = _rotationTransform;
+							 self.alpha = 1.0f;
+					   } completion: ^(BOOL finished) {
+						   unlock(self.minimumShowTime);
+					   }];
 	});
 }
 
-- (void)hide:(BOOL)animated {
+- (void)hide {
 	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
-		if (!self.superview || self.alpha < 1.0)
+		if (!self.superview)
 			return;
 		
-		NSTimeInterval animationLength = animated ? (1./3.) : 0;
-		[UIView animateWithDuration:animationLength delay:0.0 options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
-			self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
-			self.alpha = 0.0f;
-		} completion:^(BOOL finished) {
-			unlock(0.0);
-			
-			if (wasHiddenBlock)
-				wasHiddenBlock(self);
-			
-			if (self.superview)
-				[self removeFromSuperview];
-		}];
+		[UIView animateWithDuration: (1./3.)
+							  delay: 0.0
+							options: (UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowAnimatedContent)
+						 animations: ^{
+							 self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(1.5f, 1.5f));
+							 self.alpha = 0.0f;
+					   } completion:^(BOOL finished) {
+						   unlock(0.0);
+						
+						   if (wasHiddenBlock)
+							   wasHiddenBlock(self);
+						
+						   if (self.superview)
+							   [self removeFromSuperview];
+					   }];
 	});
 }
 
 - (void)showWhileExecuting:(dispatch_block_t)block {
 	NSCParameterAssert(block);
 
-		[self show:YES];
 	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		[self show];
 		
 		@autoreleasepool {
 			block();
 		}
 		
-		[self hide:YES];
+		[self hide];
 	});
 }
 
