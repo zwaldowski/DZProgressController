@@ -61,11 +61,7 @@
 }
 
 - (IBAction)showUsingBlocks:(id)sender {
-    MBProgressHUD *hud = [MBProgressHUD new];
-
-	hud.label.text = @"Loading";
-
-	[hud showWhileExecuting:^{
+	[MBProgressHUD showWithText:@"Loading" whileExecuting:^(MBProgressHUD *HUD) {
 		[self myTask];
 	}];
 }

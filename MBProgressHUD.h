@@ -66,6 +66,21 @@ typedef enum {
 + (BOOL)hideHUDForView:(UIView *)view animated:(BOOL)animated;
 
 /**
+ * Shows a HUD on the current window using while executing a block in the background.
+ *
+ * The block is executed from a separate queue unrelated to the UI main thread. The HUD is passed
+ * as an argument to the block for progress updates, changes, and so on. The HUD should not be
+ * dismissed from within the block; instead, bail out using a return statement.
+ *
+ * @param statusText The text for the main label. Send an empty string to not show the label at all.
+ * @param block A code block to be executed. Should not be NULL.
+ *
+ * @see label
+ * @see showWhileExecuting:
+ */
++ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(MBProgressHUD *))block;
+
+/**
  * The view to be shown when the HUD is set to MBProgressHUDModeCustomView.
  * For best results, use a 37x37 view (so the bounds match the default indicator bounds). 
  *
@@ -75,26 +90,22 @@ typedef enum {
 @property (nonatomic, strong) UIView *customView;
 
 /** 
- * MBProgressHUD operation mode. The default is MBProgressHUDModeIndeterminate.
+ * HUD operation mode. The default is MBProgressHUDModeIndeterminate.
  *
  * @see MBProgressHUDMode
  */
 @property (nonatomic) MBProgressHUDMode mode;
 
-/**
- * A callback fired when the HUD is tapped.
- */
+/** A callback fired when the HUD is tapped. */
 @property (nonatomic, copy) void(^wasTappedBlock)(MBProgressHUD *);
 
-/**
- * A callback fired when the HUD is hidden.
- */
+/** A callback fired when the HUD is hidden. */
 @property (nonatomic, copy) void(^wasHiddenBlock)(MBProgressHUD *);
 
 /*
  * The show delay is the time (in seconds) that your method may run without the HUD
  * being shown. If the task finishes before the grace time runs out, the HUD will
- * not appear at all, usually if you have a very short task.
+ * not appear at all.
  *
  * Defaults to 0. If you don't set one and still might have a short task,
  * it is recommended to set a minimum show time instead.
@@ -114,15 +125,10 @@ typedef enum {
  */
 @property (nonatomic) NSTimeInterval minimumShowTime;
 
-/**
- * Removes the HUD from it's parent view when hidden. 
- * Defaults to NO. 
- */
+/** Removes the HUD from its parent view when hidden. Defaults to NO. */
 @property (nonatomic) BOOL removeFromSuperViewOnHide;
 
-/** 
- * A view that displays the text for the main label.
- */
+/** Returns the label used for the main textual content of the HUD. */
 @property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
 /** 
@@ -179,7 +185,7 @@ typedef enum {
 /**
  * Coalesces changes to the HUD (mode, view, text, fonts) into a single animation.
  *
- * This method is non-blocking. The HUD cannot be hidden while animations are ongoing.
+ * This method is non-blocking, but the HUD cannot be hidden while animations are ongoing.
  *
  * @param A code block of changes to the HUD. Will be executed from within a transition method.
  */

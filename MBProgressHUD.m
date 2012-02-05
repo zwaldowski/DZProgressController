@@ -94,6 +94,16 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	}
 }
 
++ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(MBProgressHUD *))block {
+	if (!block) return;
+	
+	MBProgressHUD *thisHUD = [self new];
+	thisHUD.label.text = statusText;
+	[thisHUD showWhileExecuting:^{
+		block(thisHUD);
+	}];
+}
+
 #pragma mark - Private notifications
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
