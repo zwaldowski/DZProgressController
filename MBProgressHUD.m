@@ -282,8 +282,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 - (void)showWhileExecuting:(dispatch_block_t)block {
 	NSCParameterAssert(block);
 
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 		[self show:YES];
+	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 		
 		@autoreleasepool {
 			block();
