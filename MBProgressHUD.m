@@ -13,8 +13,8 @@
 typedef void(^MBUnlockBlock)(NSTimeInterval);
 typedef void(^MBLockBlock)(const MBUnlockBlock unlock);
 
-const id MBProgressHUDSuccessImageView = @"MBProgressHUDSuccessImageView";
-const id MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
+NSString *const MBProgressHUDSuccessImageView = @"MBProgressHUDSuccessImageView";
+NSString *const MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
 
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
@@ -113,6 +113,17 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
+- (void)tapGestureRecognizerFired:(UITapGestureRecognizer *)recognizer {
+	if (recognizer.state != UIGestureRecognizerStateRecognized)
+		return;
+	
+	if (!CGRectContainsPoint(_HUDRect, [recognizer locationInView:self]))
+		return;
+	
+	if (wasTappedBlock)
+		wasTappedBlock(self);
+}
+
 - (void)reloadOrientation:(NSNotification *)notification { 
 	if (!self.superview)
 		return;
@@ -145,17 +156,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 			self.transform = _rotationTransform;
 		} completion:NULL];
 	}
-}
-
-- (void)tapGestureRecognizerFired:(UITapGestureRecognizer *)recognizer {
-	if (recognizer.state != UIGestureRecognizerStateRecognized)
-		return;
-	
-	if (!CGRectContainsPoint(_HUDRect, [recognizer locationInView:self]))
-		return;
-	
-	if (wasTappedBlock)
-		wasTappedBlock(self);
 }
 
 - (void)reloadIndicatorView:(UIView *)newIndicator {
@@ -193,8 +193,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		
 		UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognizerFired:)];
 		[self addGestureRecognizer:recognizer];
-		
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
     }
     return self;
 }
@@ -211,10 +209,9 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 #pragma mark - Lifecycle methods
 
 - (void)willMoveToSuperview:(UIView *)newSuperview {
-	self.frame = newSuperview.bounds;
-	if ([newSuperview isKindOfClass:[UIWindow class]])
-		[self reloadOrientation:nil];
 	[super willMoveToSuperview:newSuperview];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadOrientation:) name:UIDeviceOrientationDidChangeNotification object:nil];
+	[self reloadOrientation:nil];
 }
 
 - (void)removeFromSuperview {
