@@ -419,13 +419,22 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)setProgress:(CGFloat)newProgress {
+	[self setProgress:newProgress animated:NO];
+}
+
+- (void)setProgress:(CGFloat)newProgress animated:(BOOL)animated {
     if (mode != MBProgressHUDModeDeterminate)
 		return;
 	
 	dispatch_reentrant_main(^{
 		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
-		[(MBRoundProgressView *)_indicator setProgress:newProgress];
+		
+		NSTimeInterval length = animated ? (1./3.) : 0.0;
+		
+		[UIView animateWithDuration:length delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+			[(MBRoundProgressView *)_indicator setProgress:newProgress];
+		} completion:NULL];
 	});
 }
 
@@ -455,15 +464,53 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark -
 
+#import <QuartzCore/QuartzCore.h>
+
+@interface MBRoundProgressLayer : CALayer
+
+@property (nonatomic) CGFloat progress;
+
+@end
+
+@implementation MBRoundProgressLayer
+
+@dynamic progress;
+
++ (BOOL)needsDisplayForKey:(NSString *)key {
+	return [key isEqualToString:@"progress"] || [super needsDisplayForKey:key];
+}
+
+- (void)drawInContext:(CGContextRef)context {
+	CGRect circleRect = self.bounds;
+	
+	CGFloat radius = CGRectGetMidX(circleRect);
+	CGPoint center = CGPointMake(radius, CGRectGetMidY(circleRect));
+	CGFloat startAngle = -M_PI / 2; // 90 degrees
+	CGFloat endAngle = self.progress * 2 * M_PI + startAngle;
+	CGContextSetFillColorWithColor(context, self.borderColor);
+	CGContextMoveToPoint(context, center.x, center.y);
+	CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
+	CGContextClosePath(context);
+	CGContextFillPath(context);
+	
+	[super drawInContext:context];
+}
+
+- (id)actionForKey:(NSString *) aKey {
+    if ([aKey isEqualToString:@"progress"]) {
+        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:aKey];
+        animation.fromValue = [self.presentationLayer valueForKey:aKey];
+        return animation;
+    }
+	return [super actionForKey:aKey];
+}
+
+@end
+
 @implementation MBRoundProgressView
 
-@synthesize progress;
-
-- (void)setProgress:(CGFloat)newProgress {
-	if (newProgress == progress || (newProgress && newProgress < progress))
-		return;
-    progress = newProgress;
-    [self setNeedsDisplay];
++ (Class)layerClass {
+	return [MBRoundProgressLayer class];
 }
 
 - (id)init {
@@ -471,37 +518,23 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.backgroundColor = [UIColor clearColor];
+    if ((self = [super initWithFrame:frame])) {
 		self.opaque = NO;
+        self.backgroundColor = [UIColor clearColor];
+		self.layer.borderWidth = 2.0f;
+		self.layer.borderColor = [[UIColor whiteColor] CGColor];
+		self.layer.cornerRadius = CGRectGetMidX(frame);
+		self.layer.backgroundColor = [[UIColor colorWithWhite:1.0 alpha:0.15] CGColor];
     }
     return self;
 }
 
-- (void)drawRect:(CGRect)rect {
-	CGRect allRect = self.bounds;
-    CGRect circleRect = CGRectInset(allRect, 2.0f, 2.0f);
-	
-	CGContextRef context = UIGraphicsGetCurrentContext();
-	
-	// Draw background
-	CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
-	CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 0.1);
-    CGContextSetLineWidth(context, 2.0f);
-    CGContextFillEllipseInRect(context, circleRect);
-    CGContextStrokeEllipseInRect(context, circleRect);
-    
-    // Draw progress
-    CGPoint center = CGPointMake(CGRectGetMidX(allRect), CGRectGetMidY(allRect));
-    CGFloat radius = floorf((allRect.size.width - 4) / 2);
-    CGFloat startAngle = -M_PI / 2; // 90 degrees
-    CGFloat endAngle = (self.progress * 2 * M_PI) + startAngle;
-	CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
-    CGContextMoveToPoint(context, center.x, center.y);
-    CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
-    CGContextClosePath(context);
-    CGContextFillPath(context);
+- (void)setProgress:(CGFloat)progress {
+	[(MBRoundProgressLayer *)self.layer setProgress:progress];
+}
+
+- (CGFloat)progress {
+	return [(MBRoundProgressLayer *)self.layer progress];
 }
 
 @end

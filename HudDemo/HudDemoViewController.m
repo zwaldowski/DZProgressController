@@ -113,11 +113,10 @@
 
 - (void)myProgressTask {
     // This just increases the progress indicator in a loop
-    CGFloat progress = 0.0f;
-    while (progress < 1.0f) {
-        progress += 0.01f;
-        HUD.progress = progress;
-        usleep(50000);
+	HUD.progress = 0.0f;
+    while (HUD.progress < 1.0f) {
+        usleep(1000000);
+        HUD.progress += 0.2f;
     }
 }
 

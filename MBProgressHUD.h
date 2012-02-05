@@ -126,9 +126,17 @@ typedef enum {
 @property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
 /** 
- * The progress of the progress indicator, from 0.0 to 1.0. Defaults to 0.0. 
+ * The progress of the progress indicator, from 0.0 to 1.0.
  */
 @property (nonatomic) CGFloat progress;
+
+/** 
+ * The progress of the progress indicator, from 0.0 to 1.0. Animatable.
+ *
+ * @param progress A new value for the progress indicator.
+ * @param animated If YES, the progress change is animated.
+ */
+- (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
 
 /** 
  * Display the HUD.
