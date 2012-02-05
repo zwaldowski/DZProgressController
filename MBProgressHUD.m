@@ -129,7 +129,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		return;
 	
 	// Stay in sync with the superview
-	self.bounds = self.superview.bounds;
+	self.frame = self.superview.bounds;
 	
 	if ([self.superview isKindOfClass:[UIWindow class]]) {
 		UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
