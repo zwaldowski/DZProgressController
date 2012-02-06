@@ -185,7 +185,7 @@ typedef enum {
  *
  * @param block A code block to be executed while the HUD is shown.
  */
-- (void)showWhileExecuting:(dispatch_block_t)block;
+- (void)showWhileExecuting:(void(^)(void))block;
 
 /**
  * Coalesces changes to the HUD (mode, view, text, fonts) into a single animation.
@@ -194,7 +194,7 @@ typedef enum {
  *
  * @param A code block of changes to the HUD. Will be executed from within a transition method.
  */
-- (void)performChanges:(dispatch_block_t)animations;
+- (void)performChanges:(void(^)(void))animations;
 
 @end
 

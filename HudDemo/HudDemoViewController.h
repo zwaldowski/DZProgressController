@@ -11,7 +11,7 @@
 @class MBProgressHUD;
 
 @interface HudDemoViewController : UIViewController {
-	MBProgressHUD *HUD;
+	MBProgressHUD *networkHUD;
 	
 	long long expectedLength;
 	long long currentLength;
@@ -25,11 +25,6 @@
 - (IBAction)showURL:(id)sender;
 - (IBAction)showWithSuccess:(id)sender;
 - (IBAction)showWithError:(id)sender;
-
-
-- (void)myTask;
-- (void)myProgressTask;
-- (void)myMixedTask;
 
 @end
 

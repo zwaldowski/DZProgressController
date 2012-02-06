@@ -271,7 +271,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	});
 }
 
-- (void)showWhileExecuting:(dispatch_block_t)block {
+- (void)showWhileExecuting:(void(^)(void))block {
 	NSCParameterAssert(block);
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -285,14 +285,14 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	});
 }
 
-- (void)performChanges:(dispatch_block_t)animations {
+- (void)performChanges:(void(^)(void))animations {
 	NSCParameterAssert(animations);
 	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
 		[UIView transitionWithView:self
 						  duration:(1./3.)
 						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionLayoutSubviews|UIViewAnimationOptionAllowAnimatedContent
-						animations:animations
-						completion:^(BOOL finished){ unlock(self.minimumShowTime); }];
+						animations: animations
+						completion: ^(BOOL finished){ unlock(self.minimumShowTime); }];
 	});
 }
 

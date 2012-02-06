@@ -21,48 +21,83 @@
 
 - (IBAction)showSimple:(id)sender {
     // The hud will dispable all input on the view (use the higest view possible in the view hierarchy)
-    HUD = [MBProgressHUD new];
+    MBProgressHUD *HUD = [MBProgressHUD new];
 	
 	// Show the HUD while the provided block executes in the background
 	[HUD showWhileExecuting:^{
-		[self myTask];
+		sleep(3);
 	}];
 }
 
 - (IBAction)showWithLabel:(id)sender {
-    HUD = [MBProgressHUD new];	
+    MBProgressHUD *HUD = [MBProgressHUD new];	
 	HUD.label.text = @"Loading";
 	[HUD showWhileExecuting:^{
-		[self myTask];
+		sleep(3);
 	}];
 }
 
 - (IBAction)showWithLabelDeterminate:(id)sender {
-    HUD = [MBProgressHUD new];
+    MBProgressHUD *HUD = [MBProgressHUD new];
 	
     // Set determinate mode
     HUD.mode = MBProgressHUDModeDeterminate;
     HUD.label.text = @"Loading";
 	
 	// myProgressTask uses the HUD instance to update progress
-	[HUD showWhileExecuting:^{
-		[self myProgressTask];
+	[HUD showWhileExecuting: ^{
+		HUD.progress = 0.0f;
+		while (HUD.progress < 1.0f) {
+			usleep(1000000);
+			HUD.progress += 0.2f;
+		}
 	}];
 }
 
 - (IBAction)showWithLabelMixed:(id)sender {
-    HUD = [MBProgressHUD new];
+    MBProgressHUD *HUD = [MBProgressHUD new];
 	
     HUD.label.text = @"Connecting";
 	
-	[HUD showWhileExecuting:^{
-		[self myMixedTask];
+	[HUD showWhileExecuting: ^{
+		// Indeterminate mode
+		sleep(2);
+		
+		// Switch to determinate mode
+		[HUD performChanges: ^{
+			HUD.mode = MBProgressHUDModeDeterminate;
+			HUD.label.text = @"Progress";
+		}];
+		
+		CGFloat progress = 0.0f;
+		while (progress < 1.0f)
+		{
+			progress += 0.01f;
+			HUD.progress = progress;
+			usleep(50000);
+		}
+		
+		// Back to indeterminate mode
+		[HUD performChanges: ^{
+			HUD.mode = MBProgressHUDModeIndeterminate;
+			HUD.label.text = @"Cleaning up";
+		}];
+		
+		sleep(2);
+		
+		[HUD performChanges: ^{
+			HUD.customView = MBProgressHUDSuccessImageView;
+			HUD.mode = MBProgressHUDModeCustomView;
+			HUD.label.text = @"Completed";
+		}];
+		
+		sleep(2);
 	}];
 }
 
 - (IBAction)showUsingBlocks:(id)sender {
-	[MBProgressHUD showWithText:@"Loading" whileExecuting:^(MBProgressHUD *HUD) {
-		[self myTask];
+	[MBProgressHUD showWithText:@"Loading" whileExecuting:^(MBProgressHUD *HUD){
+		sleep(3);
 	}];
 }
 
@@ -73,82 +108,30 @@
 	NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
 	[connection start];
 	
-	HUD = [MBProgressHUD new];
-	[HUD show];
+	networkHUD = [MBProgressHUD new];
+	[networkHUD show];
 }
 
 - (IBAction)showWithSuccess:(id)sender {
-	MBProgressHUD *inlineHUD = [MBProgressHUD new];
+	MBProgressHUD *HUD = [MBProgressHUD new];
 	
-	inlineHUD.customView = MBProgressHUDSuccessImageView;
-    inlineHUD.mode = MBProgressHUDModeCustomView;
-    inlineHUD.label.text = @"Completed";
+	HUD.customView = MBProgressHUDSuccessImageView;
+    HUD.mode = MBProgressHUDModeCustomView;
+    HUD.label.text = @"Completed";
 	
-    [inlineHUD show];
-	[inlineHUD hide];
+    [HUD show];
+	[HUD hide];
 }
 
 - (IBAction)showWithError:(id)sender {
-	MBProgressHUD *inlineHUD = [MBProgressHUD new];
+	MBProgressHUD *HUD = [MBProgressHUD new];
 	
-    inlineHUD.mode = MBProgressHUDModeCustomView;
-	inlineHUD.customView = MBProgressHUDErrorImageView;
-    inlineHUD.label.text = @"Failed";
+    HUD.mode = MBProgressHUDModeCustomView;
+	HUD.customView = MBProgressHUDErrorImageView;
+    HUD.label.text = @"Failed";
 	
-    [inlineHUD show];
-    [inlineHUD hide];
-}
-
-#pragma mark -
-#pragma mark Execution code
-
-- (void)myTask {
-    // Do something usefull in here instead of sleeping ...
-    sleep(3);
-}
-
-- (void)myProgressTask {
-    // This just increases the progress indicator in a loop
-	HUD.progress = 0.0f;
-    while (HUD.progress < 1.0f) {
-        usleep(1000000);
-        HUD.progress += 0.2f;
-    }
-}
-
-- (void)myMixedTask {
-    // Indeterminate mode
-    sleep(2);
-	
-    // Switch to determinate mode
-	[HUD performChanges:^{
-		HUD.mode = MBProgressHUDModeDeterminate;
-		HUD.label.text = @"Progress";
-	}];
-	
-    CGFloat progress = 0.0f;
-    while (progress < 1.0f)
-    {
-        progress += 0.01f;
-        HUD.progress = progress;
-        usleep(50000);
-    }
-	
-    // Back to indeterminate mode
-	[HUD performChanges:^{
-		HUD.mode = MBProgressHUDModeIndeterminate;
-		HUD.label.text = @"Cleaning up";
-	}];
-	
-    sleep(2);
-	
-	[HUD performChanges:^{
-		HUD.customView = MBProgressHUDSuccessImageView;
-		HUD.mode = MBProgressHUDModeCustomView;
-		HUD.label.text = @"Completed";
-	}];
-	
-	sleep(2);
+    [HUD show];
+    [HUD hide];
 }
 
 #pragma mark - NSURLConnectionDelegete
@@ -156,30 +139,30 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	expectedLength = [response expectedContentLength];
 	currentLength = 0;
-	[HUD performChanges:^{
-		HUD.mode = MBProgressHUDModeDeterminate;
+	[networkHUD performChanges:^{
+		networkHUD.mode = MBProgressHUDModeDeterminate;
 	}];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
 	currentLength += [data length];
-	HUD.progress = currentLength / (CGFloat)expectedLength;
+	networkHUD.progress = currentLength / (CGFloat)expectedLength;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	[HUD performChanges:^{
-		HUD.customView = MBProgressHUDSuccessImageView;
-		HUD.mode = MBProgressHUDModeCustomView;
+	[networkHUD performChanges:^{
+		networkHUD.customView = MBProgressHUDSuccessImageView;
+		networkHUD.mode = MBProgressHUDModeCustomView;
 	}];
-	[HUD hide];
+	[networkHUD hide];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	[HUD performChanges:^{
-		HUD.customView = MBProgressHUDErrorImageView;
-		HUD.mode = MBProgressHUDModeCustomView;
+	[networkHUD performChanges:^{
+		networkHUD.customView = MBProgressHUDErrorImageView;
+		networkHUD.mode = MBProgressHUDModeCustomView;
 	}];
-	[HUD hide];
+	[networkHUD hide];
 }
 
 @end

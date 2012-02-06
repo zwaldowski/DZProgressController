@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">528</int>
-		<string key="IBDocument.SystemVersion">11C74</string>
+		<string key="IBDocument.SystemVersion">11D50</string>
 		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1138.23</string>
-		<string key="IBDocument.HIToolboxVersion">567.00</string>
+		<string key="IBDocument.AppKitVersion">1138.32</string>
+		<string key="IBDocument.HIToolboxVersion">568.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 			<string key="NS.object.0">933</string>
@@ -74,10 +74,9 @@
 				<object class="NSMutableArray" key="IBUIViewControllers">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<object class="IBUIViewController" id="934427715">
-						<string key="IBUITitle">MBProgressHUD</string>
 						<object class="IBUINavigationItem" key="IBUINavigationItem" id="390734610">
 							<reference key="IBUINavigationBar"/>
-							<string key="IBUITitle">MBProgressHUD</string>
+							<string key="IBUITitle"/>
 							<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
 						</object>
 						<reference key="IBUIParentViewController" ref="386664917"/>
@@ -215,19 +214,17 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>showOnWindow:</string>
 							<string>showSimple:</string>
 							<string>showURL:</string>
 							<string>showUsingBlocks:</string>
-							<string>showWithCustomView:</string>
-							<string>showWithDetailsLabel:</string>
+							<string>showWithError:</string>
 							<string>showWithLabel:</string>
 							<string>showWithLabelDeterminate:</string>
 							<string>showWithLabelMixed:</string>
+							<string>showWithSuccess:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -242,22 +239,17 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>showOnWindow:</string>
 							<string>showSimple:</string>
 							<string>showURL:</string>
 							<string>showUsingBlocks:</string>
-							<string>showWithCustomView:</string>
-							<string>showWithDetailsLabel:</string>
+							<string>showWithError:</string>
 							<string>showWithLabel:</string>
 							<string>showWithLabelDeterminate:</string>
 							<string>showWithLabelMixed:</string>
+							<string>showWithSuccess:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<object class="IBActionInfo">
-								<string key="name">showOnWindow:</string>
-								<string key="candidateClassName">id</string>
-							</object>
 							<object class="IBActionInfo">
 								<string key="name">showSimple:</string>
 								<string key="candidateClassName">id</string>
@@ -271,11 +263,7 @@
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">showWithCustomView:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">showWithDetailsLabel:</string>
+								<string key="name">showWithError:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -288,6 +276,10 @@
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">showWithLabelMixed:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showWithSuccess:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 						</object>
