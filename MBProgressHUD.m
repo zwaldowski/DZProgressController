@@ -161,12 +161,14 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	if (!newIndicator)
 		newIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
 	
-	[_indicator removeFromSuperview];
-	_indicator = newIndicator;
-	[self addSubview:newIndicator];
-	if (mode == MBProgressHUDModeIndeterminate)
-		[(UIActivityIndicatorView *)newIndicator startAnimating];
-	[self setNeedsLayout];
+	dispatch_reentrant_main(^{
+		[_indicator removeFromSuperview];
+		_indicator = newIndicator;
+		[self addSubview:newIndicator];
+		if (mode == MBProgressHUDModeIndeterminate)
+			[(UIActivityIndicatorView *)newIndicator startAnimating];
+		[self setNeedsLayout];
+	});
 }
 
 #pragma mark - Setup and teardown
@@ -183,7 +185,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
         // Set default values for properties
 		[self reloadIndicatorView:nil];
 		self.minimumShowTime = 1.5;
-		
 		
         // UIView properties
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -379,9 +380,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	else if (mode == MBProgressHUDModeCustomView && self.customView)
 		newIndicator = self.customView;
 	
-	dispatch_reentrant_main(^{
-		[self reloadIndicatorView:newIndicator];
-	});
+	[self reloadIndicatorView:newIndicator];
 }
 
 - (void)setCustomView:(UIView *)newCustomView {
@@ -396,9 +395,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	
 	customView = newCustomView;
 	
-	dispatch_reentrant_main(^{
-		[self reloadIndicatorView:newCustomView];
-	});
+	[self reloadIndicatorView:newCustomView];
 }
 
 - (CGFloat)progress {
@@ -409,18 +406,25 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)setProgress:(CGFloat)newProgress {
-	[self setProgress:newProgress animated:NO];
+	dispatch_reentrant_main(^{
+		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
+			return;
+		
+		[(MBRoundProgressView *)_indicator setProgress:newProgress];
+	});
 }
 
 - (void)setProgress:(CGFloat)newProgress animated:(BOOL)animated {
-    if (mode != MBProgressHUDModeDeterminate)
-		return;
+	if (!animated)
+		[self setProgress:newProgress];
 	
 	dispatch_reentrant_main(^{
 		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
 			return;
 		
-		[(MBRoundProgressView *)_indicator setProgress:newProgress animated:animated];
+		[UIView animateWithDuration:(1./3.) delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
+			[(MBRoundProgressView *)_indicator setProgress:newProgress];
+		} completion:NULL];
 	});
 }
 
@@ -516,15 +520,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)setProgress:(CGFloat)progress {
-	[self setProgress:progress animated:NO];
-}
-
-- (void)setProgress:(CGFloat)progress animated:(BOOL)animated {
-	NSTimeInterval length = animated ? (1./3.) : 0.0;
-	
-	[UIView animateWithDuration:length delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-		[(MBRoundProgressLayer *)self.layer setProgress:progress];
-	} completion:NULL];
+	[(MBRoundProgressLayer *)self.layer setProgress:progress];
 }
 
 - (CGFloat)progress {
