@@ -37,10 +37,14 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 		void (^unlockBlock)(NSTimeInterval) = ^(NSTimeInterval delay){
-			dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
-			dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+			if (delay == 0.0) {
 				dispatch_semaphore_signal(semaphore);
-			});
+			} else {
+				dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delay * NSEC_PER_SEC);
+				dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+					dispatch_semaphore_signal(semaphore);
+				});				
+			}
 		};
 		dispatch_reentrant_main(^{
 			block(unlockBlock);
