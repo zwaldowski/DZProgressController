@@ -15,4 +15,5 @@ Pod::Spec.new do |s|
   s.resources    = 'Images/*.png'
   s.clean_paths  = 'Doxyfile', 'HudDemo', 'HudDemo.xcodeproj', '.gitignore'
   s.framework    = 'QuartzCore'
+  s.requires_arc = true
 end
