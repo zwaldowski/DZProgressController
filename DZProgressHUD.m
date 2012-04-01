@@ -1,6 +1,7 @@
 //
 //  DZProgressHUD.m
 //
+//  (c) 2012 Zachary Waldowski.
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //
@@ -58,7 +59,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	UIStatusBarStyle _statusBarStyle;
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
-	__unsafe_unretained UIView *_indicator;
+	__weak UIView *_indicator;
 	dispatch_semaphore_t _animationSemaphore;
 }
 

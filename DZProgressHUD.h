@@ -1,6 +1,7 @@
 //
 //  DZProgressHUD.h
 //
+//  (c) 2012 Zachary Waldowski.
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //
@@ -140,7 +141,7 @@ typedef enum {
 /**
  * Returns the label used for the main textual content of the HUD.
  */
-@property (nonatomic, unsafe_unretained, readonly) UILabel *label;
+@property (nonatomic, weak, readonly) UILabel *label;
 
 /**
  * The progress of the progress indicator, from 0.0 to 1.0.
@@ -148,7 +149,7 @@ typedef enum {
 @property (nonatomic) CGFloat progress;
 
 /** 
- * The progress of the progress indicator, from 0.0 to 1.0. Animatable.
+ * Set the progress of the progress indicator, from 0.0 to 1.0. Animatable.
  *
  * @param progress A new value for the progress indicator.
  * @param animated If YES, the progress change is animated.

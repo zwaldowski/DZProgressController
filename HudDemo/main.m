@@ -2,8 +2,9 @@
 //  main.m
 //  HudDemo
 //
-//  Created by Matej Bukovinski on 2.4.09.
-//  Copyright bukovinski.com 2009. All rights reserved.
+//  (c) 2012 Zachary Waldowski.
+//  (c) 2009-2011 Matej Bukovinski and contributors.
+//  This code is licensed under MIT. See LICENSE for more information. 
 //
 
 #import <UIKit/UIKit.h>
