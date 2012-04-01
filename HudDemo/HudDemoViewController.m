@@ -7,7 +7,7 @@
 //
 
 #import "HudDemoViewController.h"
-#import "MBProgressHUD.h"
+#import "DZProgressHUD.h"
 
 @implementation HudDemoViewController
 
@@ -21,7 +21,7 @@
 
 - (IBAction)showSimple:(id)sender {
     // The hud will dispable all input on the view (use the higest view possible in the view hierarchy)
-    MBProgressHUD *HUD = [MBProgressHUD new];
+    DZProgressHUD *HUD = [DZProgressHUD new];
 	
 	// Show the HUD while the provided block executes in the background
 	[HUD showWhileExecuting:^{
@@ -30,7 +30,7 @@
 }
 
 - (IBAction)showWithLabel:(id)sender {
-    MBProgressHUD *HUD = [MBProgressHUD new];	
+    DZProgressHUD *HUD = [DZProgressHUD new];	
 	HUD.label.text = @"Loading";
 	[HUD showWhileExecuting:^{
 		sleep(3);
@@ -38,10 +38,10 @@
 }
 
 - (IBAction)showWithLabelDeterminate:(id)sender {
-    MBProgressHUD *HUD = [MBProgressHUD new];
+    DZProgressHUD *HUD = [DZProgressHUD new];
 	
     // Set determinate mode
-    HUD.mode = MBProgressHUDModeDeterminate;
+    HUD.mode = DZProgressHUDModeDeterminate;
     HUD.label.text = @"Loading";
 	
 	// myProgressTask uses the HUD instance to update progress
@@ -55,7 +55,7 @@
 }
 
 - (IBAction)showWithLabelMixed:(id)sender {
-    MBProgressHUD *HUD = [MBProgressHUD new];
+    DZProgressHUD *HUD = [DZProgressHUD new];
 	
     HUD.label.text = @"Connecting";
 	
@@ -65,7 +65,7 @@
 		
 		// Switch to determinate mode
 		[HUD performChanges: ^{
-			HUD.mode = MBProgressHUDModeDeterminate;
+			HUD.mode = DZProgressHUDModeDeterminate;
 			HUD.label.text = @"Progress";
 		}];
 		
@@ -79,15 +79,15 @@
 		
 		// Back to indeterminate mode
 		[HUD performChanges: ^{
-			HUD.mode = MBProgressHUDModeIndeterminate;
+			HUD.mode = DZProgressHUDModeIndeterminate;
 			HUD.label.text = @"Cleaning up";
 		}];
 		
 		sleep(2);
 		
 		[HUD performChanges: ^{
-			HUD.customView = MBProgressHUDSuccessImageView;
-			HUD.mode = MBProgressHUDModeCustomView;
+			HUD.customView = DZProgressHUDSuccessImageView;
+			HUD.mode = DZProgressHUDModeCustomView;
 			HUD.label.text = @"Completed";
 		}];
 		
@@ -96,27 +96,27 @@
 }
 
 - (IBAction)showUsingBlocks:(id)sender {
-	[MBProgressHUD showWithText:@"Loading" whileExecuting:^(MBProgressHUD *HUD){
+	[DZProgressHUD showWithText:@"Loading" whileExecuting:^(DZProgressHUD *HUD){
 		sleep(3);
 	}];
 }
 
 - (IBAction)showURL:(id)sender {
-	NSURL *URL = [NSURL URLWithString:@"https://github.com/matej/MBProgressHUD/zipball/master"];
+	NSURL *URL = [NSURL URLWithString:@"https://github.com/matej/DZProgressHUD/zipball/master"];
 	NSURLRequest *request = [NSURLRequest requestWithURL:URL];
 	
 	NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
 	[connection start];
 	
-	networkHUD = [MBProgressHUD new];
+	networkHUD = [DZProgressHUD new];
 	[networkHUD show];
 }
 
 - (IBAction)showWithSuccess:(id)sender {
-	MBProgressHUD *HUD = [MBProgressHUD new];
+	DZProgressHUD *HUD = [DZProgressHUD new];
 	
-	HUD.customView = MBProgressHUDSuccessImageView;
-    HUD.mode = MBProgressHUDModeCustomView;
+	HUD.customView = DZProgressHUDSuccessImageView;
+    HUD.mode = DZProgressHUDModeCustomView;
     HUD.label.text = @"Completed";
 	
     [HUD show];
@@ -124,10 +124,10 @@
 }
 
 - (IBAction)showWithError:(id)sender {
-	MBProgressHUD *HUD = [MBProgressHUD new];
+	DZProgressHUD *HUD = [DZProgressHUD new];
 	
-    HUD.mode = MBProgressHUDModeCustomView;
-	HUD.customView = MBProgressHUDErrorImageView;
+    HUD.mode = DZProgressHUDModeCustomView;
+	HUD.customView = DZProgressHUDErrorImageView;
     HUD.label.text = @"Failed";
 	
     [HUD show];
@@ -140,7 +140,7 @@
 	expectedLength = [response expectedContentLength];
 	currentLength = 0;
 	[networkHUD performChanges:^{
-		networkHUD.mode = MBProgressHUDModeDeterminate;
+		networkHUD.mode = DZProgressHUDModeDeterminate;
 	}];
 }
 
@@ -151,16 +151,16 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 	[networkHUD performChanges:^{
-		networkHUD.customView = MBProgressHUDSuccessImageView;
-		networkHUD.mode = MBProgressHUDModeCustomView;
+		networkHUD.customView = DZProgressHUDSuccessImageView;
+		networkHUD.mode = DZProgressHUDModeCustomView;
 	}];
 	[networkHUD hide];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
 	[networkHUD performChanges:^{
-		networkHUD.customView = MBProgressHUDErrorImageView;
-		networkHUD.mode = MBProgressHUDModeCustomView;
+		networkHUD.customView = DZProgressHUDErrorImageView;
+		networkHUD.mode = DZProgressHUDModeCustomView;
 	}];
 	[networkHUD hide];
 }

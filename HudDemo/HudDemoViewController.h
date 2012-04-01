@@ -8,10 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
-@class MBProgressHUD;
+@class DZProgressHUD;
 
 @interface HudDemoViewController : UIViewController {
-	MBProgressHUD *networkHUD;
+	DZProgressHUD *networkHUD;
 	
 	long long expectedLength;
 	long long currentLength;

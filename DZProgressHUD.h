@@ -1,5 +1,5 @@
 //
-//  MBProgressHUD.h
+//  DZProgressHUD.h
 //
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
@@ -8,19 +8,19 @@
 #import <UIKit/UIKit.h>
 
 /** When set as the HUD's custom view, the HUD will show a check image. **/
-extern const id MBProgressHUDSuccessImageView;
+extern const id DZProgressHUDSuccessImageView;
 
 /** When set as the HUD's custom view, the HUD will show an error image. **/
-extern const id MBProgressHUDErrorImageView;
+extern const id DZProgressHUDErrorImageView;
 
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
-    MBProgressHUDModeIndeterminate,
-    /** Progress is shown using a MBRoundProgressView. */
-	MBProgressHUDModeDeterminate,
+    DZProgressHUDModeIndeterminate,
+    /** Progress is shown using a DZRoundProgressView. */
+	DZProgressHUDModeDeterminate,
 	/** Shows a custom view */
-	MBProgressHUDModeCustomView
-} MBProgressHUDMode;
+	DZProgressHUDModeCustomView
+} DZProgressHUDMode;
 
 /** 
  * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
@@ -32,16 +32,16 @@ typedef enum {
  * a rounded semi-transparent box that resizes depending on its content.
  *
  * The HUD supports three modes of operation:
- * - MBProgressHUDModeIndeterminate - shows a UIActivityIndicatorView
- * - MBProgressHUDModeDeterminate - shows a custom round progress indicator
- * - MBProgressHUDModeCustomView - shows an arbitrary, user specified view
+ * - DZProgressHUDModeIndeterminate - shows a UIActivityIndicatorView
+ * - DZProgressHUDModeDeterminate - shows a custom round progress indicator
+ * - DZProgressHUDModeCustomView - shows an arbitrary, user specified view
  *
  * All three modes have an optional label. If the label has text, then the label
  * is placed below the indicator view.
  *
  * @see customView
  */
-@interface MBProgressHUD : UIView
+@interface DZProgressHUD : UIView
 
 /**
  * Creates a new HUD and shows it on the current window.
@@ -51,7 +51,7 @@ typedef enum {
  * @see showOnView:
  * @see hide
  */
-+ (MBProgressHUD *)show;
++ (DZProgressHUD *)show;
 
 /**
  * Creates a new HUD and shows it on the provided view.
@@ -62,7 +62,7 @@ typedef enum {
  * @see show
  * @see hide
  */
-+ (MBProgressHUD *)showOnView:(UIView *)view;
++ (DZProgressHUD *)showOnView:(UIView *)view;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.
@@ -75,7 +75,7 @@ typedef enum {
  *
  * @see showWithText:whileExecuting:
  */
-+ (void)showWhileExecuting:(void(^)(MBProgressHUD *))block;
++ (void)showWhileExecuting:(void(^)(DZProgressHUD *))block;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.
@@ -90,29 +90,29 @@ typedef enum {
  * @see label
  * @see showWhileExecuting:
  */
-+ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(MBProgressHUD *))block;
++ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(DZProgressHUD *))block;
 
 /**
- * The view to be shown when the HUD is set to MBProgressHUDModeCustomView.
+ * The view to be shown when the HUD is set to DZProgressHUDModeCustomView.
  * For best results, use a 37x37 view (so the bounds match the default indicator bounds). 
  *
- * Pass `MBProgressHUDSuccessImageView` for an image view with a check.
- * Pass `MBProgressHUDErrorImageView`, for an image view with an error symbol.
+ * Pass `DZProgressHUDSuccessImageView` for an image view with a check.
+ * Pass `DZProgressHUDErrorImageView`, for an image view with an error symbol.
  **/
 @property (nonatomic, strong) UIView *customView;
 
 /** 
- * HUD operation mode. The default is MBProgressHUDModeIndeterminate.
+ * HUD operation mode. The default is DZProgressHUDModeIndeterminate.
  *
- * @see MBProgressHUDMode
+ * @see DZProgressHUDMode
  */
-@property (nonatomic) MBProgressHUDMode mode;
+@property (nonatomic) DZProgressHUDMode mode;
 
 /** A callback fired when the HUD is tapped. */
-@property (nonatomic, copy) void(^wasTappedBlock)(MBProgressHUD *);
+@property (nonatomic, copy) void(^wasTappedBlock)(DZProgressHUD *);
 
 /** A callback fired when the HUD is hidden. */
-@property (nonatomic, copy) void(^wasHiddenBlock)(MBProgressHUD *);
+@property (nonatomic, copy) void(^wasHiddenBlock)(DZProgressHUD *);
 
 /*
  * The show delay is the time (in seconds) that your method may run without the HUD
@@ -203,7 +203,7 @@ typedef enum {
 /**
  * A progress view for showing definite progress by filling up a circle (pie chart).
  */
-@interface MBRoundProgressView : UIView
+@interface DZRoundProgressView : UIView
 
 @property (nonatomic) CGFloat progress;
 

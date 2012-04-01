@@ -1,19 +1,19 @@
 //
-//  MBProgressHUD.m
+//  DZProgressHUD.m
 //
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //
 
-#import "MBProgressHUD.h"
+#import "DZProgressHUD.h"
 
 #pragma mark Constants and Functions
 
-typedef void(^MBUnlockBlock)(NSTimeInterval);
-typedef void(^MBLockBlock)(const MBUnlockBlock unlock);
+typedef void(^DZProgressHUDUnlockBlock)(NSTimeInterval);
+typedef void(^DZProgressHUDLockBlock)(const DZProgressHUDUnlockBlock unlock);
 
-NSString *const MBProgressHUDSuccessImageView = @"MBProgressHUDSuccessImageView";
-NSString *const MBProgressHUDErrorImageView = @"MBProgressHUDErrorImageView";
+NSString *const DZProgressHUDSuccessImageView = @"DZProgressHUDSuccessImageView";
+NSString *const DZProgressHUDErrorImageView = @"DZProgressHUDErrorImageView";
 
 static const CGFloat padding = 4.0f;
 static const CGFloat margin = 18.0f;
@@ -32,7 +32,7 @@ static void dispatch_reentrant_main(dispatch_block_t block) {
 	}
 }
 
-static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlock block) {
+static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgressHUDLockBlock block) {
 	NSCParameterAssert(block);
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
@@ -54,7 +54,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark -
 
-@implementation MBProgressHUD {
+@implementation DZProgressHUD {
 	UIStatusBarStyle _statusBarStyle;
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
@@ -72,24 +72,24 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark - Class methods
 
-+ (MBProgressHUD *)show {
++ (DZProgressHUD *)show {
 	return [self showOnView:nil];
 }
 
-+ (MBProgressHUD *)showOnView:(UIView *)view {
-	MBProgressHUD *hud = [MBProgressHUD new];
++ (DZProgressHUD *)showOnView:(UIView *)view {
+	DZProgressHUD *hud = [DZProgressHUD new];
 	[hud showOnView:view];
 	return hud;
 }
 
-+ (void)showWhileExecuting:(void(^)(MBProgressHUD *))block {
++ (void)showWhileExecuting:(void(^)(DZProgressHUD *))block {
 	[self showWithText:nil whileExecuting:block];
 }
 
-+ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(MBProgressHUD *))block {
++ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(DZProgressHUD *))block {
 	if (!block) return;
 	
-	MBProgressHUD *thisHUD = [self new];
+	DZProgressHUD *thisHUD = [self new];
 	thisHUD.label.text = statusText;
 	[thisHUD showWhileExecuting:^{
 		block(thisHUD);
@@ -169,7 +169,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		[_indicator removeFromSuperview];
 		_indicator = newIndicator;
 		[self addSubview:newIndicator];
-		if (mode == MBProgressHUDModeIndeterminate)
+		if (mode == DZProgressHUDModeIndeterminate)
 			[(UIActivityIndicatorView *)newIndicator startAnimating];
 		[self setNeedsLayout];
 	});
@@ -233,7 +233,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	if (!self.superview && !view)
 		view = [[[UIApplication sharedApplication] delegate] respondsToSelector:@selector(window)] ? [[[UIApplication sharedApplication] delegate] window] : [[[UIApplication sharedApplication] windows] objectAtIndex:0];
 	
-	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const DZProgressHUDUnlockBlock unlock) {
 		if (!self.superview)				
 			[view addSubview:self];
 		
@@ -254,7 +254,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)hide {
-	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const DZProgressHUDUnlockBlock unlock) {
 		if (!self.superview)
 			return;
 		
@@ -292,7 +292,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 - (void)performChanges:(void(^)(void))animations {
 	NSCParameterAssert(animations);
-	dispatch_semaphore_execute(_animationSemaphore, ^(const MBUnlockBlock unlock) {
+	dispatch_semaphore_execute(_animationSemaphore, ^(const DZProgressHUDUnlockBlock unlock) {
 		[UIView transitionWithView:self
 						  duration:(1./3.)
 						   options:UIViewAnimationOptionCurveEaseInOut|UIViewAnimationOptionTransitionFlipFromRight|UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionLayoutSubviews|UIViewAnimationOptionAllowAnimatedContent
@@ -367,7 +367,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #pragma mark - Accessors
 
-- (void)setMode:(MBProgressHUDMode)newMode {
+- (void)setMode:(DZProgressHUDMode)newMode {
     // Don't change mode if it wasn't actually changed to prevent flickering
     if (mode && (mode == newMode)) {
         return;
@@ -377,11 +377,11 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 	
 	UIView *newIndicator = nil;
 	
-	if (mode == MBProgressHUDModeDeterminate)
-		newIndicator = [MBRoundProgressView new];
-	else if (mode == MBProgressHUDModeIndeterminate)
+	if (mode == DZProgressHUDModeDeterminate)
+		newIndicator = [DZRoundProgressView new];
+	else if (mode == DZProgressHUDModeIndeterminate)
 		newIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-	else if (mode == MBProgressHUDModeCustomView && self.customView)
+	else if (mode == DZProgressHUDModeCustomView && self.customView)
 		newIndicator = self.customView;
 	
 	[self reloadIndicatorView:newIndicator];
@@ -389,9 +389,9 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 - (void)setCustomView:(UIView *)newCustomView {
 	if ([newCustomView isKindOfClass:[NSString class]]) {
-		if ([newCustomView isEqual:MBProgressHUDSuccessImageView])
+		if ([newCustomView isEqual:DZProgressHUDSuccessImageView])
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
-		else if ([newCustomView isEqual:MBProgressHUDErrorImageView])
+		else if ([newCustomView isEqual:DZProgressHUDErrorImageView])
 			newCustomView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"error"]];
 		else
 			return;
@@ -403,18 +403,18 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (CGFloat)progress {
-    if (mode != MBProgressHUDModeDeterminate)
+    if (mode != DZProgressHUDModeDeterminate)
 		return 0.0f;
 	
-	return [(MBRoundProgressView *)_indicator progress];
+	return [(DZRoundProgressView *)_indicator progress];
 }
 
 - (void)setProgress:(CGFloat)newProgress {
 	dispatch_reentrant_main(^{
-		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
+		if (![_indicator isKindOfClass:[DZRoundProgressView class]])
 			return;
 		
-		[(MBRoundProgressView *)_indicator setProgress:newProgress];
+		[(DZRoundProgressView *)_indicator setProgress:newProgress];
 	});
 }
 
@@ -423,11 +423,11 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 		[self setProgress:newProgress];
 	
 	dispatch_reentrant_main(^{
-		if (![_indicator isKindOfClass:[MBRoundProgressView class]])
+		if (![_indicator isKindOfClass:[DZRoundProgressView class]])
 			return;
 		
 		[UIView animateWithDuration:(1./3.) delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
-			[(MBRoundProgressView *)_indicator setProgress:newProgress];
+			[(DZRoundProgressView *)_indicator setProgress:newProgress];
 		} completion:NULL];
 	});
 }
@@ -460,13 +460,13 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 #import <QuartzCore/QuartzCore.h>
 
-@interface MBRoundProgressLayer : CALayer
+@interface DZRoundProgressLayer : CALayer
 
 @property (nonatomic) CGFloat progress;
 
 @end
 
-@implementation MBRoundProgressLayer
+@implementation DZRoundProgressLayer
 
 @dynamic progress;
 
@@ -501,10 +501,10 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 
 @end
 
-@implementation MBRoundProgressView
+@implementation DZRoundProgressView
 
 + (Class)layerClass {
-	return [MBRoundProgressLayer class];
+	return [DZRoundProgressLayer class];
 }
 
 - (id)init {
@@ -524,11 +524,11 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, MBLockBlo
 }
 
 - (void)setProgress:(CGFloat)progress {
-	[(MBRoundProgressLayer *)self.layer setProgress:progress];
+	[(id)self.layer setProgress:progress];
 }
 
 - (CGFloat)progress {
-	return [(MBRoundProgressLayer *)self.layer progress];
+	return [(id)self.layer progress];
 }
 
 @end
