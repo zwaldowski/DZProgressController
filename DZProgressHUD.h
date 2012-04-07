@@ -141,7 +141,7 @@ typedef enum {
 /**
  * Returns the label used for the main textual content of the HUD.
  */
-@property (nonatomic, weak, readonly) UILabel *label;
+@property (nonatomic, unsafe_unretained, readonly) UILabel *label;
 
 /**
  * The progress of the progress indicator, from 0.0 to 1.0.

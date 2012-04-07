@@ -59,7 +59,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	UIStatusBarStyle _statusBarStyle;
 	CGRect _HUDRect;
 	CGAffineTransform _rotationTransform;
-	__weak UIView *_indicator;
+	__unsafe_unretained UIView *_indicator;
 	dispatch_semaphore_t _animationSemaphore;
 }
 
