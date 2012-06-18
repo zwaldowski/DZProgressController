@@ -30,7 +30,7 @@
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	CGContextSaveGState(context);
 	CGContextSetFillColorWithColor(context, [[UIColor colorWithWhite: 0 alpha: 0.75] CGColor]);
-	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithWhite: 1 alpha: 0.1] CGColor]);
+	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithWhite: 1 alpha: 0.3] CGColor]);
 	CGContextSetLineWidth(context, 2);
 	CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 10, [[UIColor colorWithWhite:0 alpha:0.7] CGColor]);
 	CGPathRef shape = [[UIBezierPath bezierPathWithRoundedRect: CGRectInset(rect, 12.0f, 12.0f) cornerRadius: 8.0f] CGPath];
@@ -112,6 +112,7 @@
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
 		self.opaque = NO;
+		self.layer.contentsScale = [[UIScreen mainScreen] scale];
 		[self.layer setNeedsDisplay];
     }
     return self;
