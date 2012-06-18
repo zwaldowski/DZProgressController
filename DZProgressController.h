@@ -87,17 +87,9 @@ typedef enum {
 @property (nonatomic, strong, readonly) UILabel *label;
 
 /**
- * The progress of the progress indicator, from 0.0 to 1.0.
+ * The progress of the progress indicator, from 0.0 to 1.0. Always animated.
  */
 @property (nonatomic) CGFloat progress;
-
-/** 
- * Set the progress of the progress indicator, from 0.0 to 1.0. Animatable.
- *
- * @param progress A new value for the progress indicator.
- * @param animated If YES, the progress change is animated.
- */
-- (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
 
 /** A callback fired when the HUD is tapped. */
 @property (nonatomic, copy) void(^wasTappedBlock)(DZProgressController *);

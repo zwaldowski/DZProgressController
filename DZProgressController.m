@@ -308,20 +308,6 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	});
 }
 
-- (void)setProgress:(CGFloat)newProgress animated:(BOOL)animated {
-	if (!animated)
-		[self setProgress:newProgress];
-	
-	dispatch_reentrant_main(^{
-		if (![_indicator isKindOfClass:[DZRoundProgressView class]])
-			return;
-		
-		[UIView animateWithDuration:(1./3.) delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState|UIViewAnimationOptionAllowAnimatedContent animations:^{
-			[(DZRoundProgressView *)_indicator setProgress:newProgress];
-		} completion:NULL];
-	});
-}
-
 - (UILabel *)label {
 	if (!_label) {
 		UILabel *label = [[UILabel alloc] initWithFrame: CGRectZero];

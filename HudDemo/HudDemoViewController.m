@@ -147,7 +147,7 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
 	currentLength += [data length];
-	[networkHUD setProgress:currentLength / (CGFloat)expectedLength animated:YES];
+	networkHUD.progress = currentLength / (CGFloat)expectedLength;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
