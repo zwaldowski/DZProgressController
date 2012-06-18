@@ -453,7 +453,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	dispatch_semaphore_execute(_animationSemaphore, ^(const DZProgressControllerUnlockBlock unlock) {
 		[UIView transitionWithView: self.frameView
 						  duration: (1./3.)
-						   options: UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionTransitionFlipFromRight | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionLayoutSubviews | UIViewAnimationOptionAllowAnimatedContent
+						   options: UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionTransitionFlipFromRight | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowAnimatedContent
 						animations: animations
 						completion: ^(BOOL finished) {
 							unlock(self.minimumShowTime);
