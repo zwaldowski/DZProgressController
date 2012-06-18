@@ -1,7 +1,9 @@
 //
-//  DZProgressHUD.h
+//  DZProgressController.h
+//  DZProgressController
 //
 //  (c) 2012 Zachary Waldowski.
+//  (c) 2012 cocopon.
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //
@@ -9,40 +11,21 @@
 #import <UIKit/UIKit.h>
 
 /** When set as the HUD's custom view, the HUD will show a check image. **/
-extern const id DZProgressHUDSuccessImageView;
+extern const id DZProgressControllerSuccessView;
 
 /** When set as the HUD's custom view, the HUD will show an error image. **/
-extern const id DZProgressHUDErrorImageView;
+extern const id DZProgressControllerErrorView;
 
 typedef enum {
     /** Progress is shown using an UIActivityIndicatorView. This is the default. */
-    DZProgressHUDModeIndeterminate,
+    DZProgressControllerModeIndeterminate,
     /** Progress is shown using a DZRoundProgressView. */
-	DZProgressHUDModeDeterminate,
+	DZProgressControllerModeDeterminate,
 	/** Shows a custom view */
-	DZProgressHUDModeCustomView
-} DZProgressHUDMode;
+	DZProgressControllerModeCustomView
+} DZProgressControllerMode;
 
-/** 
- * Displays a simple HUD window containing a progress indicator and two optional labels for short messages.
- *
- * This is a simple drop-in class for displaying a progress HUD view similar to the
- * private UIProgressHUD. The HUD view spans over the entire space given to it by
- * its superview and catches all touches on that region, thereby preventing user
- * interaction on components below the view. The HUD itself is drawn centered as
- * a rounded semi-transparent box that resizes depending on its content.
- *
- * The HUD supports three modes of operation:
- * - DZProgressHUDModeIndeterminate - shows a UIActivityIndicatorView
- * - DZProgressHUDModeDeterminate - shows a custom round progress indicator
- * - DZProgressHUDModeCustomView - shows an arbitrary, user specified view
- *
- * All three modes have an optional label. If the label has text, then the label
- * is placed below the indicator view.
- *
- * @see customView
- */
-@interface DZProgressHUD : UIView
+@interface DZProgressController : UIViewController <UIAppearanceContainer>
 
 /**
  * Creates a new HUD and shows it on the current window.
@@ -52,18 +35,7 @@ typedef enum {
  * @see showOnView:
  * @see hide
  */
-+ (DZProgressHUD *)show;
-
-/**
- * Creates a new HUD and shows it on the provided view.
- * 
- * @param view The view that the HUD will be added to.
- * @return A reference to the created HUD.
- *
- * @see show
- * @see hide
- */
-+ (DZProgressHUD *)showOnView:(UIView *)view;
++ (DZProgressController *)show;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.
@@ -76,7 +48,7 @@ typedef enum {
  *
  * @see showWithText:whileExecuting:
  */
-+ (void)showWhileExecuting:(void(^)(DZProgressHUD *))block;
++ (void)showWhileExecuting:(void(^)(DZProgressController *))block;
 
 /**
  * Shows a HUD on the current window using while executing a block in the background.
@@ -91,11 +63,11 @@ typedef enum {
  * @see label
  * @see showWhileExecuting:
  */
-+ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(DZProgressHUD *))block;
++ (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(DZProgressController *))block;
 
 /**
  * The view to be shown when the HUD is set to DZProgressHUDModeCustomView.
- * For best results, use a 37x37 view (so the bounds match the default indicator bounds). 
+ * For best results, use a 37x37 pt view (so the bounds match the default indicator bounds). 
  *
  * Pass `DZProgressHUDSuccessImageView` for an image view with a check.
  * Pass `DZProgressHUDErrorImageView`, for an image view with an error symbol.
@@ -103,17 +75,35 @@ typedef enum {
 @property (nonatomic, strong) UIView *customView;
 
 /** 
- * HUD operation mode. The default is DZProgressHUDModeIndeterminate.
+ * HUD operation mode. The default is DZProgressControllerModeModeIndeterminate.
  *
- * @see DZProgressHUDMode
+ * @see DZProgressControllerMode
  */
-@property (nonatomic) DZProgressHUDMode mode;
+@property (nonatomic) DZProgressControllerMode mode;
+
+/**
+ * Returns the label used for the main textual content of the HUD.
+ */
+@property (nonatomic, strong, readonly) UILabel *label;
+
+/**
+ * The progress of the progress indicator, from 0.0 to 1.0.
+ */
+@property (nonatomic) CGFloat progress;
+
+/** 
+ * Set the progress of the progress indicator, from 0.0 to 1.0. Animatable.
+ *
+ * @param progress A new value for the progress indicator.
+ * @param animated If YES, the progress change is animated.
+ */
+- (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
 
 /** A callback fired when the HUD is tapped. */
-@property (nonatomic, copy) void(^wasTappedBlock)(DZProgressHUD *);
+@property (nonatomic, copy) void(^wasTappedBlock)(DZProgressController *);
 
 /** A callback fired when the HUD is hidden. */
-@property (nonatomic, copy) void(^wasHiddenBlock)(DZProgressHUD *);
+@property (nonatomic, copy) void(^wasHiddenBlock)(DZProgressController *);
 
 /*
  * The show delay is the time (in seconds) that your method may run without the HUD
@@ -139,49 +129,24 @@ typedef enum {
 @property (nonatomic) NSTimeInterval minimumShowTime;
 
 /**
- * Returns the label used for the main textual content of the HUD.
+ * Returns whether or not the HUD is currently visible.
  */
-@property (nonatomic, unsafe_unretained, readonly) UILabel *label;
+@property (nonatomic, readonly, getter = isVisible) BOOL visible;
 
 /**
- * The progress of the progress indicator, from 0.0 to 1.0.
- */
-@property (nonatomic) CGFloat progress;
-
-/** 
- * Set the progress of the progress indicator, from 0.0 to 1.0. Animatable.
- *
- * @param progress A new value for the progress indicator.
- * @param animated If YES, the progress change is animated.
- */
-- (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
-
-/** Display the HUD.
- *
- * All user interaction on the view is disabled while the HUD is shown.
- *
- * @see showOnView:
+ * Display the HUD. All user interaction with the app is disabled while the HUD is shown.
  */
 - (void)show;
 
 /** 
- * Display the HUD on a given view.
- *
- * All user interaction on the view is disabled while the HUD is shown.
- *
- * @see show
- */
-- (void)showOnView:(UIView *)view;
-
-/** 
- * Remove the HUD from its view. Use it to hide the HUD when your task completes.
+ * Hide the HUD when your task completes.
  */
 - (void)hide;
 
 /** 
  * Shows the HUD while a task is executing in a background queue, then hides it.
  *
- * This method also takes care of an autorelease pools so your method does not have
+ * This method also takes care of an autorelease pool so your method does not have
  * to be concerned with setting one up.
  *
  * @param block A code block to be executed while the HUD is shown.
@@ -196,16 +161,5 @@ typedef enum {
  * @param A code block of changes to the HUD. Will be executed from within a transition method.
  */
 - (void)performChanges:(void(^)(void))animations;
-
-@end
-
-#pragma mark -
-
-/**
- * A progress view for showing definite progress by filling up a circle (pie chart).
- */
-@interface DZRoundProgressView : UIView
-
-@property (nonatomic) CGFloat progress;
 
 @end
