@@ -21,21 +21,24 @@
 
 - (id)initWithFrame:(CGRect)frame {
 	if ((self = [super initWithFrame:frame])) {
-		self.backgroundColor = [UIColor clearColor];
+		self.opaque = NO;
 		self.contentMode = UIViewContentModeRedraw;
-		self.layer.shadowOffset = CGSizeMake(0, 2);
-		self.layer.shadowOpacity = 0.7f;
-		self.layer.shadowRadius = 10.0f;
-		self.layer.borderWidth = 1.0f;
-		self.layer.borderColor = [[UIColor colorWithWhite:1.00f alpha:0.10f] CGColor];
-		self.layer.cornerRadius = 8.0f;
 	}
 	return self;
 }
 
 - (void)drawRect:(CGRect)rect {
-	[[UIColor colorWithWhite:0.0 alpha:0.75] setFill];
-	[[UIBezierPath bezierPathWithRoundedRect: CGRectInset(self.bounds, 1.0f, 1.0f) cornerRadius: 8.0f] fill];
+	CGContextRef context = UIGraphicsGetCurrentContext();
+	CGContextSaveGState(context);
+	CGContextSetFillColorWithColor(context, [[UIColor colorWithWhite: 0 alpha: 0.75] CGColor]);
+	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithWhite: 1 alpha: 0.1] CGColor]);
+	CGContextSetLineWidth(context, 2);
+	CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 10, [[UIColor colorWithWhite:0 alpha:0.7] CGColor]);
+	CGPathRef shape = [[UIBezierPath bezierPathWithRoundedRect: CGRectInset(rect, 12.0f, 12.0f) cornerRadius: 8.0f] CGPath];
+	CGContextAddPath(context, shape);
+	CGContextFillPath(context);
+	CGContextStrokePath(context);
+	CGContextRestoreGState(context);
 }
 
 @end
@@ -61,7 +64,7 @@
 
 	CGColorRef borderColor = [[UIColor whiteColor] CGColor];
 	CGColorRef backgroundColor = [[UIColor colorWithWhite: 1.0 alpha: 0.15] CGColor];
-	
+		
 	CGContextSetFillColorWithColor(context, backgroundColor);
 	CGContextSetStrokeColorWithColor(context, borderColor);
 	CGContextSetLineWidth(context, 2.0f);
@@ -352,7 +355,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	const CGFloat margin = 18.0f;
 	const CGFloat padding = 4.0f;
 	
-	CGRect rect = self.view.bounds;
+	CGRect rect = CGRectInset(self.view.bounds, 12, 12);
 	CGPoint indicatorOrigin = CGPointZero;
 	
 	CGSize frameSize = CGSizeMake(self.indicator.bounds.size.width + 2 * margin, self.indicator.bounds.size.height + 2 * margin);
@@ -373,6 +376,9 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	
 	if (frameSize.height < minSize.height)
 		frameSize.height = minSize.height;
+	
+	frameSize.width += 12;
+	frameSize.height += 12;
 	
 	indicatorOrigin.x = roundf((frameSize.width / 2) - CGRectGetMidX(self.indicator.bounds));
     indicatorOrigin.y = roundf((frameSize.height / 2) - CGRectGetMidY(self.indicator.bounds));
