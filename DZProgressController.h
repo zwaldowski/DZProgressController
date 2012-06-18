@@ -66,11 +66,11 @@ typedef enum {
 + (void)showWithText:(NSString *)statusText whileExecuting:(void(^)(DZProgressController *))block;
 
 /**
- * The view to be shown when the HUD is set to DZProgressHUDModeCustomView.
+ * The view to be shown when the HUD is set to DZProgressControllerModeCustomView.
  * For best results, use a 37x37 pt view (so the bounds match the default indicator bounds). 
  *
- * Pass `DZProgressHUDSuccessImageView` for an image view with a check.
- * Pass `DZProgressHUDErrorImageView`, for an image view with an error symbol.
+ * Pass `DZProgressControllerSuccessView` for an image view with a check.
+ * Pass `DZProgressControllerErrorView`, for an image view with an error symbol.
  **/
 @property (nonatomic, strong) UIView *customView;
 

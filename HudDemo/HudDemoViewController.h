@@ -1,18 +1,19 @@
 //
 //  HudDemoViewController.h
-//  HudDemo
+//  DZProgressController Demo
 //
 //  (c) 2012 Zachary Waldowski.
+//  (c) 2012 cocopon.
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //
 
 #import <UIKit/UIKit.h>
 
-@class DZProgressHUD;
+@class DZProgressController;
 
 @interface HudDemoViewController : UIViewController {
-	DZProgressHUD *networkHUD;
+	DZProgressController *networkHUD;
 	
 	long long expectedLength;
 	long long currentLength;

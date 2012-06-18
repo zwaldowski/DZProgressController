@@ -18,8 +18,8 @@
 		6C583A3414D8380D00219C4E /* success@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C583A3214D8380D00219C4E /* success@2x.png */; };
 		6C583A3D14D85F8C00219C4E /* error.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C583A3B14D85F8C00219C4E /* error.png */; };
 		6C583A3E14D85F8C00219C4E /* error@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C583A3C14D85F8C00219C4E /* error@2x.png */; };
+		6C7552AA158E63A4002C65BC /* DZProgressController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7552A9158E63A4002C65BC /* DZProgressController.m */; };
 		6CEB648414DE4AA900AD1AF6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CEB648314DE4AA900AD1AF6 /* QuartzCore.framework */; };
-		D22F7D810F85241C00550BB3 /* DZProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = D22F7D800F85241C00550BB3 /* DZProgressHUD.m */; };
 		D277FDB311FC834200304321 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = D277FDB211FC834200304321 /* Default.png */; };
 		D277FDB911FC877E00304321 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = D277FDB711FC877E00304321 /* Icon.png */; };
 		D277FDBA11FC877E00304321 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D277FDB811FC877E00304321 /* Icon@2x.png */; };
@@ -40,10 +40,10 @@
 		6C583A3214D8380D00219C4E /* success@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "success@2x.png"; sourceTree = "<group>"; };
 		6C583A3B14D85F8C00219C4E /* error.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = error.png; sourceTree = "<group>"; };
 		6C583A3C14D85F8C00219C4E /* error@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "error@2x.png"; sourceTree = "<group>"; };
+		6C7552A8158E63A4002C65BC /* DZProgressController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DZProgressController.h; sourceTree = "<group>"; };
+		6C7552A9158E63A4002C65BC /* DZProgressController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DZProgressController.m; sourceTree = "<group>"; };
 		6CEB648314DE4AA900AD1AF6 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		8D1107310486CEB800E47090 /* HudDemo-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "HudDemo-Info.plist"; sourceTree = "<group>"; };
-		D22F7D7F0F85241C00550BB3 /* DZProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DZProgressHUD.h; sourceTree = "<group>"; };
-		D22F7D800F85241C00550BB3 /* DZProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DZProgressHUD.m; sourceTree = "<group>"; };
 		D277FDB211FC834200304321 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		D277FDB711FC877E00304321 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		D277FDB811FC877E00304321 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
@@ -90,8 +90,8 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
-				D22F7D7F0F85241C00550BB3 /* DZProgressHUD.h */,
-				D22F7D800F85241C00550BB3 /* DZProgressHUD.m */,
+				6C7552A8158E63A4002C65BC /* DZProgressController.h */,
+				6C7552A9158E63A4002C65BC /* DZProgressController.m */,
 				D277FDBD11FC879500304321 /* Images */,
 				080E96DDFE201D6D7F000001 /* HudDemo */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -159,7 +159,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0450;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "HudDemo" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -207,7 +207,7 @@
 			files = (
 				1D60589B0D05DD56006BFB54 /* main.m in Sources */,
 				28D7ACF80DDB3853001CB0EB /* HudDemoViewController.m in Sources */,
-				D22F7D810F85241C00550BB3 /* DZProgressHUD.m in Sources */,
+				6C7552AA158E63A4002C65BC /* DZProgressController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
