@@ -57,13 +57,23 @@
 }
 
 - (void)drawInContext:(CGContextRef)context {
-	CGRect circleRect = self.bounds;
+	CGRect circleRect = CGRectInset(self.bounds, 1, 1);
+
+	CGColorRef borderColor = [[UIColor whiteColor] CGColor];
+	CGColorRef backgroundColor = [[UIColor colorWithWhite: 1.0 alpha: 0.15] CGColor];
+	
+	CGContextSetFillColorWithColor(context, backgroundColor);
+	CGContextSetStrokeColorWithColor(context, borderColor);
+	CGContextSetLineWidth(context, 2.0f);
+	
+	CGContextFillEllipseInRect(context, circleRect);
+	CGContextStrokeEllipseInRect(context, circleRect);
 	
 	CGFloat radius = MIN(CGRectGetMidX(circleRect), CGRectGetMidY(circleRect));
 	CGPoint center = CGPointMake(radius, CGRectGetMidY(circleRect));
 	CGFloat startAngle = -M_PI / 2;
 	CGFloat endAngle = self.progress * 2 * M_PI + startAngle;
-	CGContextSetFillColorWithColor(context, self.borderColor);
+	CGContextSetFillColorWithColor(context, borderColor);
 	CGContextMoveToPoint(context, center.x, center.y);
 	CGContextAddArc(context, center.x, center.y, radius, startAngle, endAngle, 0);
 	CGContextClosePath(context);
@@ -100,11 +110,7 @@
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
 		self.opaque = NO;
-        self.backgroundColor = [UIColor clearColor];
-		self.layer.borderWidth = 2.0f;
-		self.layer.borderColor = [[UIColor whiteColor] CGColor];
-		self.layer.cornerRadius = CGRectGetMidX(frame);
-		self.layer.backgroundColor = [[UIColor colorWithWhite:1.0 alpha:0.15] CGColor];
+		[self.layer setNeedsDisplay];
     }
     return self;
 }
