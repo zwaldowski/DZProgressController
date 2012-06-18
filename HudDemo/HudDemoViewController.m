@@ -48,7 +48,7 @@
 	
 	// myProgressTask uses the HUD instance to update progress
 	[HUD showWhileExecuting: ^{
-		while (HUD.progress < 1.0f) {
+		while (HUD.progress < 1.2f) {
 			usleep(1000000);
 			HUD.progress += 0.2f;
 		}
@@ -71,7 +71,7 @@
 		}];
 		
 		CGFloat progress = 0.0f;
-		while (progress < 1.0f)
+		while (progress < 1.04f)
 		{
 			progress += 0.01f;
 			HUD.progress = progress;
@@ -140,9 +140,7 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	expectedLength = [response expectedContentLength];
 	currentLength = 0;
-	[networkHUD performChanges:^{
-		networkHUD.mode = DZProgressControllerModeDeterminate;
-	}];
+	networkHUD.mode = DZProgressControllerModeDeterminate;
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
