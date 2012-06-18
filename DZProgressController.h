@@ -3,7 +3,6 @@
 //  DZProgressController
 //
 //  (c) 2012 Zachary Waldowski.
-//  (c) 2012 cocopon.
 //  (c) 2009-2011 Matej Bukovinski and contributors.
 //  This code is licensed under MIT. See LICENSE for more information. 
 //

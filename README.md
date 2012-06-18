@@ -1,31 +1,33 @@
-DZProgressHUD
+DZProgressController
 =============
 
-`DZProgressHUD` is a drop-in iOS class that displays a translucent HUD with a progress indicator and an optional label. It is meant as an easy-to-use replacement for the undocumented, private class `UIProgressHUD`. 
+`DZProgressController` is a drop-in iOS class that displays a translucent HUD with a progress indicator and an optional label. It is meant as an easy-to-use replacement for the undocumented, private class `UIProgressHUD`. 
 
-`DZProgressHUD` is compatible with iOS 4 and up and released under the MIT license. It is derived from [MBProgressHUD](https://github.com/jdg/MBProgressHUD).
+`DZProgressController` is compatible with iOS 4 and up and released under the MIT license. It is derived from [MBProgressHUD](https://github.com/jdg/MBProgressHUD).
 
-[![Simple HUD](http://d.pr/3I3+)](http://d.pr/3I3+)
-[![With native label](http://d.pr/N42R+)](http://d.pr/N42R+)
-[![Determinate progress](http://d.pr/wukD+)](http://d.pr/wukD+)
-[![Custom view: success](http://d.pr/vlxv+)](http://d.pr/vlxv+)
-[![Custom view: failure](http://d.pr/lod2+)](http://d.pr/lod2+)
+### Screenshots
+
+* [Simple HUD](http://d.pr/i/UOdH+)
+* [With label](http://d.pr/i/UOdH+)
+* [Determinate progress](http://d.pr/i/h6Pq+)
+* [Custom view: success](http://d.pr/i/tenx+)
+* [Custom view: failure](http://d.pr/i/vTrV+)
 
 Installation
 ============
 
-The simplest way to add the `DZProgressHUD` to your project is to directly add the source files to your project, as well as the four completion images.
+The simplest way to add the `DZProgressController` to your project is to directly add the source files to your project, as well as the four completion images.
 
 1. Download the latest code version from the repository. You can simply use the Download Source button and get a zipball or tarball.
 2. Extract the archive.
-3. Open your project in Xcode, than drag and drop `DZProgressHUD.h` and `DZProgressHUD.m` to your Classes group (in the Groups & Files view). Make sure to select Copy Items when asked. 
+3. Open your project in Xcode, than drag and drop `DZProgressController.h` and `DZProgressController.m` to your Classes group (in the Groups & Files view). Make sure to select Copy Items when asked. 
 4. Drag and drop the four images (`success.png`, `success@2x.png`, `error.png`, and `error@2x.png`) into the Resources group.
 
 If you have a git tracked project, you can add DZProgressHUD as a submodule to your project. 
 
 1. `cd`` inside your git tracked project.
-2. Add `DZProgressHUD` as a submodule using `git submodule add git://github.com/zwaldowski/DZProgressHUD.git DZProgressHUD` .
-3. Open your project in Xcode, than drag and drop `DZProgressHUD.h` and `DZProgressHUD.m` to your classes group (in the Groups & Files view). Don't select Copy Items. 
+2. Add `DZProgressController` as a submodule using `git submodule add git://github.com/zwaldowski/DZProgressController.git DZProgressController` .
+3. Open your project in Xcode, than drag and drop `DZProgressController.h` and `DZProgressController.m` to your classes group (in the Groups & Files view). Don't select Copy Items. 
 4. Drag and drop the four images (`success.png`, `success@2x.png`, `error.png`, and `error@2x.png`) into the Resources group.
 
 Usage

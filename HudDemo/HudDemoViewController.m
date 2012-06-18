@@ -103,7 +103,7 @@
 }
 
 - (IBAction)showURL:(id)sender {
-	NSURL *URL = [NSURL URLWithString:@"https://github.com/zwaldowski/DZProgressHUD/zipball/master"];
+	NSURL *URL = [NSURL URLWithString:@"https://github.com/zwaldowski/DZProgressController/zipball/master"];
 	NSURLRequest *request = [NSURLRequest requestWithURL:URL];
 	
 	NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
