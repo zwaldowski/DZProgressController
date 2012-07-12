@@ -12,11 +12,11 @@
 
 #pragma mark -
 
-@interface DZPopupControllerFrameView : UIView
+@interface DZProgressControllerFrameView : UIView
 
 @end
 
-@implementation DZPopupControllerFrameView
+@implementation DZProgressControllerFrameView
 
 - (id)initWithFrame:(CGRect)frame {
 	if ((self = [super initWithFrame:frame])) {
@@ -176,7 +176,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 }
 
 @property (nonatomic, strong) UIWindow *window;
-@property (nonatomic, weak) DZPopupControllerFrameView *frameView;
+@property (nonatomic, weak) DZProgressControllerFrameView *frameView;
 @property (nonatomic, weak) UIView *indicator;
 
 @end
@@ -224,7 +224,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 - (void)viewDidLoad {
 	[super viewDidLoad];
 		
-	DZPopupControllerFrameView *frame = [[DZPopupControllerFrameView alloc] initWithFrame: CGRectZero];
+	DZProgressControllerFrameView *frame = [[DZProgressControllerFrameView alloc] initWithFrame: CGRectZero];
 	frame.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[self.view addSubview: frame];
 	UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self action: @selector(tapGestureRecognizerFired:)];
