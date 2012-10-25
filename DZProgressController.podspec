@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = 'DZProgressController'
-  s.platform     = :ios, 5.1
+  s.platform     = :ios, '5.1'
   s.version      = '1.0.0'
   s.license      = 'MIT'
   s.summary      = 'A dead simple, drop-in HUD view for iOS.'
