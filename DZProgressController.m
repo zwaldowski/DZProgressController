@@ -62,9 +62,10 @@
 	CGRect circleRect = CGRectInset(self.bounds, 1, 1);
 
 	CGColorRef borderColor = [[UIColor whiteColor] CGColor];
-	CGColorRef backgroundColor = [[UIColor colorWithWhite: 1.0 alpha: 0.15] CGColor];
+	CGColorRef backgroundColor = CGColorRetain([[UIColor colorWithWhite: 1.0 alpha: 0.15] CGColor]);
 		
 	CGContextSetFillColorWithColor(context, backgroundColor);
+    CGColorRelease(backgroundColor);
 	CGContextSetStrokeColorWithColor(context, borderColor);
 	CGContextSetLineWidth(context, 2.0f);
 	
