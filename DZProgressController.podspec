@@ -14,4 +14,5 @@ Pod::Spec.new do |s|
   s.resources    = 'Images/*.png'
   s.framework    = 'QuartzCore'
   s.requires_arc = true
+  s.xcconfig     = { "GCC_PREPROCESSOR_DEFINITIONS" => '$(inherited) OS_OBJECT_USE_OBJC=0' }
 end
