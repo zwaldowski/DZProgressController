@@ -177,6 +177,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 }
 
 @property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, weak) UIWindow *originalKeyWindow;
 @property (nonatomic, weak) DZProgressControllerFrameView *frameView;
 @property (nonatomic, weak) UIView *indicator;
 
@@ -385,6 +386,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 #pragma mark - Actions
 
 - (void)show {
+    self.originalKeyWindow = UIApplication.sharedApplication.keyWindow;
+    
 	UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	window.backgroundColor = [UIColor clearColor];
 	window.windowLevel = UIWindowLevelAlert;
@@ -425,6 +428,8 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 							 
 							 self.window.rootViewController = nil;
 							 self.window = nil;
+                           
+                           [self.originalKeyWindow makeKeyAndVisible];
 					   }];
 	});
 }
