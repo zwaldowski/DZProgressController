@@ -12,38 +12,6 @@
 
 #pragma mark -
 
-@interface DZProgressControllerFrameView : UIView
-
-@end
-
-@implementation DZProgressControllerFrameView
-
-- (id)initWithFrame:(CGRect)frame {
-	if ((self = [super initWithFrame:frame])) {
-		self.opaque = NO;
-		self.contentMode = UIViewContentModeRedraw;
-	}
-	return self;
-}
-
-- (void)drawRect:(CGRect)rect {
-	CGContextRef context = UIGraphicsGetCurrentContext();
-	CGContextSaveGState(context);
-	CGContextSetFillColorWithColor(context, [[UIColor colorWithWhite: 0 alpha: 0.75] CGColor]);
-	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithWhite: 1 alpha: 0.3] CGColor]);
-	CGContextSetLineWidth(context, 2);
-	CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 10, [[UIColor colorWithWhite:0 alpha:0.7] CGColor]);
-	CGPathRef shape = [[UIBezierPath bezierPathWithRoundedRect: CGRectInset(rect, 12.0f, 12.0f) cornerRadius: 8.0f] CGPath];
-	CGContextAddPath(context, shape);
-	CGContextFillPath(context);
-	CGContextStrokePath(context);
-	CGContextRestoreGState(context);
-}
-
-@end
-
-#pragma mark -
-
 @interface DZRoundProgressLayer : CALayer
 
 @property (nonatomic) CGFloat progress;
@@ -114,6 +82,8 @@
     if ((self = [super initWithFrame:frame])) {
 		self.opaque = NO;
 		self.layer.contentsScale = [[UIScreen mainScreen] scale];
+		self.layer.shouldRasterize = YES;
+		self.layer.rasterizationScale = [[UIScreen mainScreen] scale];
 		[self.layer setNeedsDisplay];
     }
     return self;
@@ -177,19 +147,14 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 }
 
 @property (nonatomic, strong) UIWindow *window;
-@property (nonatomic, weak) UIWindow *originalKeyWindow;
-@property (nonatomic, weak) DZProgressControllerFrameView *frameView;
+@property (nonatomic, weak) UIWindow *oldKeyWindow;
+@property (nonatomic, weak) UIImageView *frameView;
+@property (nonatomic, strong, readwrite) UILabel *label;
 @property (nonatomic, weak) UIView *indicator;
 
 @end
 
 @implementation DZProgressController
-
-@synthesize window = _window, frameView = _frameView, indicator = _indicator;
-@synthesize mode = _mode, customView = _customView;
-@synthesize showDelayTime = _showDelayTime, minimumShowTime = _minimumShowTime;
-@synthesize wasTappedBlock = _wasTappedBlock, wasHiddenBlock = _wasHiddenBlock;
-@synthesize label = _label;
 
 #pragma mark - Class methods
 
@@ -226,16 +191,42 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 - (void)viewDidLoad {
 	[super viewDidLoad];
 		
-	DZProgressControllerFrameView *frame = [[DZProgressControllerFrameView alloc] initWithFrame: CGRectZero];
+	
+	CGFloat const kShadowMargin = 12.0f;
+	CGFloat const kRadius = 8.0f;
+	CGFloat const kLength = kShadowMargin + kRadius;
+	static CGFloat const kImageLength = (kLength * 2) + 1;
+	
+	CGSize imageSize = CGSizeMake(kImageLength, kImageLength);
+	CGRect rect = (CGRect){ CGPointZero, imageSize };
+	
+	UIGraphicsBeginImageContextWithOptions(imageSize, NO, 0.0);
+	CGContextRef context = UIGraphicsGetCurrentContext();
+	CGContextSaveGState(context);
+	CGContextSetFillColorWithColor(context, [[UIColor colorWithWhite: 0 alpha: 0.75] CGColor]);
+	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithWhite: 1 alpha: 0.3] CGColor]);
+	CGContextSetLineWidth(context, 2);
+	CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 10, [[UIColor colorWithWhite:0 alpha:0.7] CGColor]);
+	CGPathRef shape = [[UIBezierPath bezierPathWithRoundedRect: CGRectInset(rect, kShadowMargin, kShadowMargin) cornerRadius: kRadius] CGPath];
+	CGContextAddPath(context, shape);
+	CGContextFillPath(context);
+	CGContextStrokePath(context);
+	CGContextRestoreGState(context);
+	UIImage *tinyImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+	UIImage *stretchyImage = [tinyImage resizableImageWithCapInsets:UIEdgeInsetsMake(kLength, kLength, kLength, kLength)];
+
+	UIImageView *frame = [[UIImageView alloc] initWithImage:stretchyImage];
 	frame.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[self.view addSubview: frame];
+	self.frameView = frame;
+	
 	UITapGestureRecognizer *recognizer = [[UITapGestureRecognizer alloc] initWithTarget: self action: @selector(tapGestureRecognizerFired:)];
-	[frame addGestureRecognizer:recognizer];
-	_frameView = frame;
+	[self.frameView addGestureRecognizer:recognizer];
 	
-	[frame addSubview: self.label];
+	[self.frameView addSubview: self.label];
 	
-	if (!_indicator)
+	if (!self.indicator)
 		self.mode = _mode;
 }
 
@@ -386,7 +377,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 #pragma mark - Actions
 
 - (void)show {
-    self.originalKeyWindow = UIApplication.sharedApplication.keyWindow;
+    self.oldKeyWindow = UIApplication.sharedApplication.keyWindow;
     
 	UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	window.backgroundColor = [UIColor clearColor];
@@ -394,7 +385,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 	window.rootViewController = self;
 	self.window = window;
 	
-	self.view.alpha = 0.00001;
+	self.view.alpha = 0;
 	self.frameView.transform = CGAffineTransformMakeScale(0.5, 0.5);
 	
 	[window makeKeyAndVisible];
@@ -419,7 +410,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 							options: UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowAnimatedContent
 						 animations: ^{
 							 self.view.transform = CGAffineTransformMakeScale(0.00001, 0.00001);
-							 self.view.alpha = 0.00001;
+							 self.view.alpha = 0;
 					   } completion:^(BOOL finished) {
 							 unlock(0.0);
 							 
@@ -429,7 +420,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 							 self.window.rootViewController = nil;
 							 self.window = nil;
                            
-                           [self.originalKeyWindow makeKeyAndVisible];
+                           [self.oldKeyWindow makeKeyAndVisible];
 					   }];
 	});
 }
