@@ -381,7 +381,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
     
 	UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	window.backgroundColor = [UIColor clearColor];
-	window.windowLevel = UIWindowLevelAlert;
+	window.windowLevel = 87;
 	window.rootViewController = self;
 	self.window = window;
 	
