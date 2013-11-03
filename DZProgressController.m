@@ -90,11 +90,11 @@
 }
 
 - (void)setProgress:(CGFloat)progress {
-	[(id)self.layer setProgress:progress];
+	[(DZRoundProgressLayer *)self.layer setProgress:progress];
 }
 
 - (CGFloat)progress {
-	return [(id)self.layer progress];
+	return [(DZRoundProgressLayer *)self.layer progress];
 }
 
 @end
