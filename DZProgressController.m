@@ -218,6 +218,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 
 	UIImageView *frame = [[UIImageView alloc] initWithImage:stretchyImage];
 	frame.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	frame.userInteractionEnabled = YES;
 	[self.view addSubview: frame];
 	self.frameView = frame;
 	
