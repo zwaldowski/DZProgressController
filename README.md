@@ -22,7 +22,7 @@ The simplest way to add the `DZProgressController` to your project is to directl
 2. Extract the archive.
 3. Open your project in Xcode, than drag and drop `DZProgressController.h` and `DZProgressController.m` to your Classes group (in the Groups & Files view). Make sure to select Copy Items when asked. 
 
-If you have a git tracked project, you can add DZProgressHUD as a submodule to your project. 
+If you have a git tracked project, you can add DZProgressController as a submodule to your project. 
 
 1. `cd`` inside your git tracked project.
 2. Add `DZProgressController` as a submodule using `git submodule add git://github.com/zwaldowski/DZProgressController.git DZProgressController` .
