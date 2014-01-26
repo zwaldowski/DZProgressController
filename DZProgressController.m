@@ -366,6 +366,7 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 			return;
 		
 		customView = [[class alloc] initWithFrame:CGRectMake(0, 0, 37, 37)];
+		customView.backgroundColor = [UIColor clearColor];
 	}
 	
 	_customView = customView;
