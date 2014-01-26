@@ -64,6 +64,90 @@
 
 @end
 
+#pragma mark - 
+
+@interface DZSuccessView : UIView
+
+@end
+
+@implementation DZSuccessView
+
+- (void)drawRect:(CGRect)rect
+{
+	UIBezierPath* shapePath = [UIBezierPath bezierPath];
+	[shapePath moveToPoint: CGPointMake(30.05, 10.56)];
+	[shapePath addLineToPoint: CGPointMake(19.47, 29.06)];
+	[shapePath addCurveToPoint: CGPointMake(17.49, 30.37) controlPoint1: CGPointMake(19.06, 29.79) controlPoint2: CGPointMake(18.32, 30.28)];
+	[shapePath addCurveToPoint: CGPointMake(17.18, 30.39) controlPoint1: CGPointMake(17.39, 30.39) controlPoint2: CGPointMake(17.28, 30.39)];
+	[shapePath addCurveToPoint: CGPointMake(15.26, 29.56) controlPoint1: CGPointMake(16.46, 30.39) controlPoint2: CGPointMake(15.76, 30.1)];
+	[shapePath addLineToPoint: CGPointMake(9.97, 23.94)];
+	[shapePath addCurveToPoint: CGPointMake(10.08, 20.21) controlPoint1: CGPointMake(8.97, 22.88) controlPoint2: CGPointMake(9.02, 21.21)];
+	[shapePath addCurveToPoint: CGPointMake(13.82, 20.32) controlPoint1: CGPointMake(11.15, 19.21) controlPoint2: CGPointMake(12.82, 19.26)];
+	[shapePath addLineToPoint: CGPointMake(16.66, 23.34)];
+	[shapePath addLineToPoint: CGPointMake(25.46, 7.94)];
+	[shapePath addCurveToPoint: CGPointMake(29.06, 6.95) controlPoint1: CGPointMake(26.18, 6.67) controlPoint2: CGPointMake(27.8, 6.23)];
+	[shapePath addCurveToPoint: CGPointMake(30.05, 10.56) controlPoint1: CGPointMake(30.33, 7.68) controlPoint2: CGPointMake(30.77, 9.29)];
+	[shapePath closePath];
+	[shapePath moveToPoint: CGPointMake(18.5, 0)];
+	[shapePath addCurveToPoint: CGPointMake(0, 18.5) controlPoint1: CGPointMake(8.28, 0) controlPoint2: CGPointMake(0, 8.28)];
+	[shapePath addCurveToPoint: CGPointMake(18.5, 37) controlPoint1: CGPointMake(0, 28.72) controlPoint2: CGPointMake(8.28, 37)];
+	[shapePath addCurveToPoint: CGPointMake(37, 18.5) controlPoint1: CGPointMake(28.72, 37) controlPoint2: CGPointMake(37, 28.72)];
+	[shapePath addCurveToPoint: CGPointMake(18.5, 0) controlPoint1: CGPointMake(37, 8.28) controlPoint2: CGPointMake(28.72, 0)];
+	[shapePath closePath];
+	
+	shapePath.usesEvenOddFillRule = YES;
+	
+	[[UIColor whiteColor] setFill];
+	[shapePath fill];
+}
+@end
+
+#pragma mark -
+
+@interface DZFailureView : UIView
+
+@end
+
+@implementation DZFailureView
+
+- (void)drawRect:(CGRect)rect
+{
+	UIBezierPath* shapePath = [UIBezierPath bezierPath];
+	[shapePath moveToPoint: CGPointMake(26.98, 26.97)];
+	[shapePath addCurveToPoint: CGPointMake(25.11, 27.75) controlPoint1: CGPointMake(26.46, 27.49) controlPoint2: CGPointMake(25.79, 27.75)];
+	[shapePath addCurveToPoint: CGPointMake(23.24, 26.97) controlPoint1: CGPointMake(24.43, 27.75) controlPoint2: CGPointMake(23.76, 27.49)];
+	[shapePath addLineToPoint: CGPointMake(18.5, 22.24)];
+	[shapePath addLineToPoint: CGPointMake(13.76, 26.97)];
+	[shapePath addCurveToPoint: CGPointMake(11.89, 27.75) controlPoint1: CGPointMake(13.25, 27.49) controlPoint2: CGPointMake(12.57, 27.75)];
+	[shapePath addCurveToPoint: CGPointMake(10.02, 26.97) controlPoint1: CGPointMake(11.22, 27.75) controlPoint2: CGPointMake(10.54, 27.49)];
+	[shapePath addCurveToPoint: CGPointMake(10.02, 23.24) controlPoint1: CGPointMake(8.99, 25.94) controlPoint2: CGPointMake(8.99, 24.27)];
+	[shapePath addLineToPoint: CGPointMake(14.76, 18.5)];
+	[shapePath addLineToPoint: CGPointMake(10.03, 13.76)];
+	[shapePath addCurveToPoint: CGPointMake(10.03, 10.02) controlPoint1: CGPointMake(8.99, 12.73) controlPoint2: CGPointMake(8.99, 11.06)];
+	[shapePath addCurveToPoint: CGPointMake(13.76, 10.02) controlPoint1: CGPointMake(11.06, 8.99) controlPoint2: CGPointMake(12.73, 8.99)];
+	[shapePath addLineToPoint: CGPointMake(18.5, 14.76)];
+	[shapePath addLineToPoint: CGPointMake(23.24, 10.02)];
+	[shapePath addCurveToPoint: CGPointMake(26.98, 10.02) controlPoint1: CGPointMake(24.27, 8.99) controlPoint2: CGPointMake(25.94, 8.99)];
+	[shapePath addCurveToPoint: CGPointMake(26.98, 13.76) controlPoint1: CGPointMake(28.01, 11.06) controlPoint2: CGPointMake(28.01, 12.73)];
+	[shapePath addLineToPoint: CGPointMake(22.24, 18.5)];
+	[shapePath addLineToPoint: CGPointMake(26.98, 23.24)];
+	[shapePath addCurveToPoint: CGPointMake(26.98, 26.97) controlPoint1: CGPointMake(28.01, 24.27) controlPoint2: CGPointMake(28.01, 25.94)];
+	[shapePath closePath];
+	[shapePath moveToPoint: CGPointMake(18.5, -0)];
+	[shapePath addCurveToPoint: CGPointMake(0, 18.5) controlPoint1: CGPointMake(8.28, -0) controlPoint2: CGPointMake(0, 8.28)];
+	[shapePath addCurveToPoint: CGPointMake(18.5, 37) controlPoint1: CGPointMake(0, 28.72) controlPoint2: CGPointMake(8.28, 37)];
+	[shapePath addCurveToPoint: CGPointMake(37, 18.5) controlPoint1: CGPointMake(28.72, 37) controlPoint2: CGPointMake(37, 28.72)];
+	[shapePath addCurveToPoint: CGPointMake(18.5, -0) controlPoint1: CGPointMake(37, 8.28) controlPoint2: CGPointMake(28.72, -0)];
+	[shapePath closePath];
+	
+	shapePath.usesEvenOddFillRule = YES;
+	
+	[[UIColor whiteColor] setFill];
+	[shapePath fill];
+}
+
+@end
+
 #pragma mark -
 
 @interface DZRoundProgressView : UIView
@@ -273,12 +357,16 @@ static void dispatch_semaphore_execute(dispatch_semaphore_t semaphore, DZProgres
 
 - (void)setCustomView:(UIView *)customView {
 	if ([customView isKindOfClass:[NSString class]]) {
+		Class class = Nil;
 		if ([customView isEqual: DZProgressControllerSuccessView])
-			customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]];
+			class = [DZSuccessView class];
 		else if ([customView isEqual: DZProgressControllerErrorView])
-			customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"error"]];
+			class = [DZFailureView class];
 		else
 			return;
+		
+		customView = [[class alloc] initWithFrame:CGRectMake(0, 0, 37, 37)];
+		customView.backgroundColor = [UIColor clearColor];
 	}
 	
 	_customView = customView;

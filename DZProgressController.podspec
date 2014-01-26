@@ -10,8 +10,7 @@ Pod::Spec.new do |s|
   s.description  = 'DZProgressController is a drop-in iOS class that displays a translucent HUD with a ' \
                    'progress indicator and an optional label while work is being done. It is meant ' \
                    'as an easy-to-use replacement for the undocumented, private class UIProgressHUD.'
-  s.source_files = '*.{h,m}'
-  s.resources    = 'Images/*.png'
+  s.source_files = 'DZProgressController.{h,m}'
   s.framework    = 'QuartzCore'
   s.requires_arc = true
 end
